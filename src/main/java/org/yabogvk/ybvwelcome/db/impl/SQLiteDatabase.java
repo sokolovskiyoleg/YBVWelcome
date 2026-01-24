@@ -1,10 +1,10 @@
-package org.yabogvk.ybvwelcome.core.db.impl;
+package org.yabogvk.ybvwelcome.db.impl;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.yabogvk.ybvwelcome.core.db.Database;
+import org.yabogvk.ybvwelcome.db.Database;
 import org.yabogvk.ybvwelcome.utils.SecurityUtils;
 
 import java.io.File;

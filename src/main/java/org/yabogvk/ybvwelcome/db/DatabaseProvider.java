@@ -1,9 +1,9 @@
-package org.yabogvk.ybvwelcome.core.db;
+package org.yabogvk.ybvwelcome.db;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.yabogvk.ybvwelcome.YBVWelcome;
-import org.yabogvk.ybvwelcome.core.db.impl.MySQLDatabase;
-import org.yabogvk.ybvwelcome.core.db.impl.SQLiteDatabase;
+import org.yabogvk.ybvwelcome.db.impl.MySQLDatabase;
+import org.yabogvk.ybvwelcome.db.impl.SQLiteDatabase;
 
 import java.io.File;
 import java.sql.SQLException;

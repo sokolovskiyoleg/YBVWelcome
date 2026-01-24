@@ -8,6 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.yabogvk.ybvwelcome.color.ColorizerProvider;
 import org.yabogvk.ybvwelcome.commands.WelcomeCommand;
 import org.yabogvk.ybvwelcome.core.WelcomeCore;
+import org.yabogvk.ybvwelcome.db.DatabaseProvider;
 import org.yabogvk.ybvwelcome.listener.PlayerJoinListener;
 import org.yabogvk.ybvwelcome.listener.PlayerQuitListener;
 import org.yabogvk.ybvwelcome.managers.MessageManager;
@@ -16,7 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Objects;
+import java.sql.SQLException;
 import java.util.logging.Level;
 
 public final class YBVWelcome extends JavaPlugin {
@@ -33,10 +34,19 @@ public final class YBVWelcome extends JavaPlugin {
         instance = this;
         ColorizerProvider.init(getConfig());
         messageManager = new MessageManager(this);
-        core = new WelcomeCore(this);
-        new WelcomeCommand();
-        registerListener();
-        getLogger().info("YBVWelcome enabled successfully!");
+        try {
+            DatabaseProvider.init(this);
+            this.messageManager = new MessageManager(this);
+            this.core = new WelcomeCore(this, this.messageManager, DatabaseProvider.database);
+            new WelcomeCommand();
+            registerListener();
+
+            getLogger().info("YBVWelcome enabled successfully!");
+
+        } catch (SQLException e) {
+            getLogger().log(Level.SEVERE, "Could not initialize database! Disabling plugin...", e);
+            Bukkit.getPluginManager().disablePlugin(this);
+        }
     }
 
     @Override

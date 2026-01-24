@@ -3,35 +3,32 @@ package org.yabogvk.ybvwelcome.core;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.yabogvk.ybvwelcome.YBVWelcome;
-import org.yabogvk.ybvwelcome.core.db.Database;
-import org.yabogvk.ybvwelcome.core.db.DatabaseProvider;
+import org.yabogvk.ybvwelcome.db.Database;
+import org.yabogvk.ybvwelcome.db.DatabaseProvider;
 import org.yabogvk.ybvwelcome.managers.MessageManager;
+import org.yabogvk.ybvwelcome.model.PlayerCache;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WelcomeCore {
-    private final MessageManager messageManager;
     private final YBVWelcome plugin;
-    private Database db;
+    private final MessageManager messageManager;
+    private final MessageService messageService;
+    private final Database db;
 
-    private final Map<UUID, PlayerCache> playerCache = new HashMap<>();
+    private final Map<UUID, PlayerCache> playerCache = new ConcurrentHashMap<>();
 
-    public WelcomeCore(YBVWelcome plugin) {
+    public WelcomeCore(YBVWelcome plugin, MessageManager messageManager, Database database) {
         this.plugin = plugin;
-        this.messageManager = plugin.getMessageManager();
-        try {
-            DatabaseProvider.init(plugin);
-            this.db = DatabaseProvider.database;
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to initialize database", e);
-        }
+        this.messageManager = messageManager;
+        this.db = database;
+        this.messageService = new MessageService(messageManager);
     }
 
-    private record PlayerCache(String joinMsg, String quitMsg) {}
 
 
     public void loadPlayerData(Player player) {
@@ -67,71 +64,22 @@ public class WelcomeCore {
     }
 
     public void handlePlayerJoin(Player player) {
-        String finalMsg = null;
-        UUID uuid = player.getUniqueId();
-        PlayerCache data = playerCache.get(uuid);
-
-        if (data != null && data.joinMsg() != null && !data.joinMsg().isEmpty()) {
-            String format = messageManager.getFormatJoinCustom();
-            finalMsg = format.replace("{message}", data.joinMsg());
-        }
-
-        if (finalMsg == null) {
-            String groupContent = messageManager.getGroupMessage(player, "join");
-            if (groupContent != null) {
-                finalMsg = groupContent; // Просто строка из конфига группы
-            }
-        }
-
-        if (finalMsg == null) {
-            String content = messageManager.getJoinDefault();
-            String format = messageManager.getFormatJoinDefault();
-            finalMsg = format.replace("{message}", content);
-        }
-
-        if (finalMsg == null || finalMsg.equalsIgnoreCase("none")) return;
-
-        finalMsg = finalMsg.replace("{player}", player.getName());
-
-        broadcast(finalMsg);
+        PlayerCache data = playerCache.get(player.getUniqueId());
+        String raw = messageService.resolveJoinMessage(player, data);
+        broadcast(raw, player);
     }
 
     public void handlePlayerQuit(Player player) {
-        String finalMsg = null;
-        UUID uuid = player.getUniqueId();
-        PlayerCache data = playerCache.get(uuid);
+        PlayerCache data = playerCache.get(player.getUniqueId());
+        String raw = messageService.resolveQuitMessage(player, data);
 
-        if (data != null && data.quitMsg() != null && !data.quitMsg().isEmpty()) {
-            String format = messageManager.getFormatQuitCustom();
-            finalMsg = format.replace("{message}", data.quitMsg());
-        }
-
-        if (finalMsg == null) {
-            String groupContent = messageManager.getGroupMessage(player, "quit");
-            if (groupContent != null) {
-                finalMsg = groupContent;
-            }
-        }
-
-        if (finalMsg == null) {
-            String content = messageManager.getQuitDefault();
-            String format = messageManager.getFormatQuitDefault();
-            finalMsg = format.replace("{message}", content);
-        }
-
-        playerCache.remove(uuid);
-
-        if (finalMsg == null || finalMsg.equalsIgnoreCase("none")) return;
-
-        finalMsg = finalMsg.replace("{player}", player.getName());
-
-        broadcast(finalMsg);
+        broadcast(raw, player);
+        playerCache.remove(player.getUniqueId());
     }
 
     public void handlePlayerFirstJoin(Player player) {
-        String format = messageManager.getFirstJoin();
-        String finalMsg = format.replace("{player}", player.getName());
-        broadcast(finalMsg);
+        String rawMessage = messageManager.getFirstJoin();
+        broadcast(rawMessage, player);
     }
 
     public void setPlayerWelcomeMessage(Player player, String message) {
@@ -179,8 +127,12 @@ public class WelcomeCore {
         });
     }
 
-    public void broadcast(String rawMessage) {
-        String colored = MessageUtils.colorize(rawMessage);
+    private void broadcast(String raw, Player player) {
+        if (raw == null || raw.equalsIgnoreCase("none")) return;
+
+        String formatted = raw.replace("{player}", player.getName());
+        String colored = MessageUtils.colorize(formatted);
+
         Bukkit.broadcastMessage(colored);
     }
 

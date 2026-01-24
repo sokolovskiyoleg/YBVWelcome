@@ -1,4 +1,4 @@
-package org.yabogvk.ybvwelcome.core.db;
+package org.yabogvk.ybvwelcome.db;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

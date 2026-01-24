@@ -12,15 +12,16 @@
 formats:
   first_join: "&8[&a&l+&8] &b&lNEW &f{player} &fвпервые на сервере!"
   join:
-    custom: "&8[&a&l+&8] &f{player} &7» &f{message}" # (/welcome set join ...)
+    custom: "&8[&a&l+&8] &f{player} &f{message}" # (/welcome set join ...)
     default: "&8[&a&l+&8] &f{player} &fприсоединился"
   quit:
-    custom: "&8[&c&l-&8] &f{player} &7» &f{message}" # (/welcome set quit ...)
+    custom: "&8[&c&l-&8] &f{player} &f{message}" # (/welcome set quit ...)
     default: "&8[&c&l-&8] &f{player} &fвышел"
 
 # --- [ СООБЩЕНИЯ ГРУПП ] ---
 # "formats" здесь игнорируется
 # Проверяются СВЕРХУ ВНИЗ (самые высокие группы ставь в начало списка)
+
 group-messages:
   enabled: true
   list:
