@@ -49,7 +49,7 @@ public final class YBVWelcome extends JavaPlugin {
         }
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
         } else {
-            getLogger().warning("Не найден PlaceholderAPI. Плейсхолдеры papi не будут работать");
+            getLogger().warning("PlaceholderAPI not found. PAPI placeholders will not work.");
         }
     }
 
