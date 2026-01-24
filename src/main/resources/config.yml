@@ -1,0 +1,26 @@
+#################################################################
+# Permissions (commands)                                        #
+# ybvwelcome.use - /ybvwelcome                                  #
+# ybvwelcome.reload - /ybvwelcome reload                        #
+# ybvwelcome.setjoin - /ybvwelcome set join (message)           #
+# ybvwelcome.setquit - /ybvwelcome set quit (message)           #
+# ybvwelcome.clearjoin - /ybvwelcome clear join (message)       #
+# ybvwelcome.clearquit - /ybvwelcome clear quit (message)       #
+#################################################################
+database:
+  type: SQLITE # SQLITE, MYSQL
+  mysql:
+    host: localhost
+    port: 3306
+    database: ybvwelcomedb
+    username: ybvwelcome
+    password: ""
+messages:
+  allowed-symbols: 10 #Без учета ColorCodes
+  join:
+    enabled: true
+    disable-vanilla: true
+    firstjoin-enabled: true
+  quit:
+    enabled: true
+    disable-vanilla: true

@@ -1,0 +1,22 @@
+name: YBVWelcome
+version: '1.1'
+main: org.yabogvk.ybvwelcome.YBVWelcome
+api-version: '1.21'
+author: yabogvk
+website: https://github.com/sokolovskiyoleg
+description: Настрой сообщения о входе/выходе
+
+commands:
+  ybvwelcome:
+    usage: /<command> [set|clear|reload]
+    alias: welcome
+permissions:
+  ybvwelcome.use:
+    description: Доступ к базовой команде
+    default: true
+  ybvwelcome.set:
+    description: Возможность устанавливать свои сообщения входа/выхода
+    default: op
+  ybvwelcome.admin:
+    description: Доступ к перезагрузке плагина
+    default: op
