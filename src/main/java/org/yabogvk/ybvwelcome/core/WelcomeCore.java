@@ -4,10 +4,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.db.Database;
-import org.yabogvk.ybvwelcome.db.DatabaseProvider;
 import org.yabogvk.ybvwelcome.managers.MessageManager;
 import org.yabogvk.ybvwelcome.model.PlayerCache;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
+import me.clip.placeholderapi.PlaceholderAPI;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -131,6 +131,11 @@ public class WelcomeCore {
         if (raw == null || raw.equalsIgnoreCase("none")) return;
 
         String formatted = raw.replace("{player}", player.getName());
+
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+            formatted = PlaceholderAPI.setPlaceholders(player, formatted);
+        }
+
         String colored = MessageUtils.colorize(formatted);
 
         Bukkit.broadcastMessage(colored);
