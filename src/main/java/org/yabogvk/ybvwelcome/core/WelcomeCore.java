@@ -1,5 +1,8 @@
 package org.yabogvk.ybvwelcome.core;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.yabogvk.ybvwelcome.YBVWelcome;
@@ -10,6 +13,7 @@ import org.yabogvk.ybvwelcome.utils.MessageUtils;
 import me.clip.placeholderapi.PlaceholderAPI;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,9 +81,32 @@ public class WelcomeCore {
         playerCache.remove(player.getUniqueId());
     }
 
-    public void handlePlayerFirstJoin(Player player) {
+    public void handlePlayerFirstJoin(Player target) {
         String rawMessage = messageManager.getFirstJoin();
-        broadcast(rawMessage, player);
+        if (rawMessage == null || rawMessage.equalsIgnoreCase("none")) return;
+
+        String formatted = rawMessage.replace("{player}", target.getName());
+        Component mainComponent = MessageUtils.parse(formatted);
+
+        Component button = MessageUtils.parse(messageManager.getWelcomeButtonText())
+                .hoverEvent(HoverEvent.showText(MessageUtils.parse(messageManager.getWelcomeButtonHover())))
+                .clickEvent(ClickEvent.callback(audience -> {
+                    if (audience instanceof Player clicker) {
+                        sendRandomWelcome(clicker, target);
+                    }
+                }));
+
+        Bukkit.broadcast(mainComponent.append(button));
+    }
+
+    private void sendRandomWelcome(Player clicker, Player target) {
+        List<String> variants = messageManager.getRandomWelcomes();
+        if (variants.isEmpty()) return;
+
+        String randomMsg = variants.get(new java.util.Random().nextInt(variants.size()));
+        String finalMsg = randomMsg.replace("{player}", target.getName());
+
+        clicker.chat(MessageUtils.colorize(finalMsg));
     }
 
     public void setPlayerWelcomeMessage(Player player, String message) {
