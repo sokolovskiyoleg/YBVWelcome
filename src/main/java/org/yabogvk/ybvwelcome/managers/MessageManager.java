@@ -7,6 +7,7 @@ import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MessageManager {
@@ -49,6 +50,12 @@ public class MessageManager {
         }
         return null;
     }
+
+    public List<String> getRandomWelcomes() { return plugin.getMessagesConfig().getStringList("random-welcomes"); }
+
+    public String getWelcomeButtonText() { return plugin.getMessagesConfig().getString("welcome-button.text", " [ПРИВЕТСТВОВАТЬ]"); }
+
+    public String getWelcomeButtonHover() { return plugin.getMessagesConfig().getString("welcome-button.hover", "Нажми сюда!"); }
 
     public String getJoinDefault() { return get("join.default", "&fприсоединился"); }
 

@@ -3,8 +3,18 @@ package org.yabogvk.ybvwelcome.utils;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.yabogvk.ybvwelcome.color.ColorizerProvider;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 public class MessageUtils {
+
+    public static Component parse(String message) {
+        if (message == null || message.isEmpty()) return Component.empty();
+        String colored = colorize(message);
+
+        return LegacyComponentSerializer.legacySection().deserialize(colored);
+    }
+
 
     public static String colorize(String message) {
         if (message == null || message.isEmpty()) return "";
