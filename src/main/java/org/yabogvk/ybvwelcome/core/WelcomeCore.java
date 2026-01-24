@@ -5,17 +5,20 @@ import org.bukkit.entity.Player;
 import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.core.db.Database;
 import org.yabogvk.ybvwelcome.core.db.DatabaseProvider;
-import org.yabogvk.ybvwelcome.core.db.impl.SQLiteDatabase;
 import org.yabogvk.ybvwelcome.managers.MessageManager;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
-import java.io.File;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class WelcomeCore {
     private final MessageManager messageManager;
     private final YBVWelcome plugin;
     private Database db;
+
+    private final Map<UUID, PlayerCache> playerCache = new HashMap<>();
 
     public WelcomeCore(YBVWelcome plugin) {
         this.plugin = plugin;
@@ -28,42 +31,118 @@ public class WelcomeCore {
         }
     }
 
-    private void handlePlayerMessage(Player player, Database.MessageType type, String defaultMessage, String preset) {
+    private record PlayerCache(String joinMsg, String quitMsg) {}
+
+
+    public void loadPlayerData(Player player) {
         async(() -> {
             try {
-                String message = db.getMessage(player.getUniqueId(), type);
+                String join = db.getMessage(player.getUniqueId(), Database.MessageType.WELCOME);
+                String quit = db.getMessage(player.getUniqueId(), Database.MessageType.QUIT);
+                playerCache.put(player.getUniqueId(), new PlayerCache(join, quit));
+            } catch (SQLException e) {
+                plugin.getLogger().warning("Ошибка загрузки данных для " + player.getName());
+            }
+        });
+    }
+
+    public void loadAndJoin(Player player, boolean isFirstJoin) {
+        async(() -> {
+            try {
+                String join = db.getMessage(player.getUniqueId(), Database.MessageType.WELCOME);
+                String quit = db.getMessage(player.getUniqueId(), Database.MessageType.QUIT);
+                playerCache.put(player.getUniqueId(), new PlayerCache(join, quit));
+
                 sync(() -> {
-                    String finalContent = (message != null && !message.isEmpty()) ? message : defaultMessage;
-                    String formatted = preset + " " + finalContent;
-                    sendMessageToAll(formatted);
+                    if (isFirstJoin) {
+                        handlePlayerFirstJoin(player);
+                    } else {
+                        handlePlayerJoin(player);
+                    }
                 });
-            } catch (Exception e) {
-                sync(() -> {
-                    sendMessageToAll(preset + " " + defaultMessage);
-                    plugin.getLogger().warning("Ошибка при получении сообщения для " + player.getName() + ": " + e.getMessage());
-                });
+            } catch (SQLException e) {
+                sync(() -> handlePlayerJoin(player));
             }
         });
     }
 
     public void handlePlayerJoin(Player player) {
-        String preset = messageManager.getJoinPreset(player);
-        handlePlayerMessage(player, Database.MessageType.WELCOME, messageManager.getJoinMessage(player), preset);
-    }
+        String finalMsg = null;
+        UUID uuid = player.getUniqueId();
+        PlayerCache data = playerCache.get(uuid);
 
-    public void handlePlayerFirstJoin(Player player) {
-        String msg = messageManager.getPresetFirstJoin(player) + " " + messageManager.getFirstJoin();
-        sendMessageToAll(msg);
+        if (data != null && data.joinMsg() != null && !data.joinMsg().isEmpty()) {
+            String format = messageManager.getFormatJoinCustom();
+            finalMsg = format.replace("{message}", data.joinMsg());
+        }
+
+        if (finalMsg == null) {
+            String groupContent = messageManager.getGroupMessage(player, "join");
+            if (groupContent != null) {
+                finalMsg = groupContent; // Просто строка из конфига группы
+            }
+        }
+
+        if (finalMsg == null) {
+            String content = messageManager.getJoinDefault();
+            String format = messageManager.getFormatJoinDefault();
+            finalMsg = format.replace("{message}", content);
+        }
+
+        if (finalMsg == null || finalMsg.equalsIgnoreCase("none")) return;
+
+        finalMsg = finalMsg.replace("{player}", player.getName());
+
+        broadcast(finalMsg);
     }
 
     public void handlePlayerQuit(Player player) {
-        String preset = messageManager.getQuitPreset(player);
-        handlePlayerMessage(player, Database.MessageType.QUIT, messageManager.getQuitMessage(player), preset);
+        String finalMsg = null;
+        UUID uuid = player.getUniqueId();
+        PlayerCache data = playerCache.get(uuid);
+
+        if (data != null && data.quitMsg() != null && !data.quitMsg().isEmpty()) {
+            String format = messageManager.getFormatQuitCustom();
+            finalMsg = format.replace("{message}", data.quitMsg());
+        }
+
+        if (finalMsg == null) {
+            String groupContent = messageManager.getGroupMessage(player, "quit");
+            if (groupContent != null) {
+                finalMsg = groupContent;
+            }
+        }
+
+        if (finalMsg == null) {
+            String content = messageManager.getQuitDefault();
+            String format = messageManager.getFormatQuitDefault();
+            finalMsg = format.replace("{message}", content);
+        }
+
+        playerCache.remove(uuid);
+
+        if (finalMsg == null || finalMsg.equalsIgnoreCase("none")) return;
+
+        finalMsg = finalMsg.replace("{player}", player.getName());
+
+        broadcast(finalMsg);
     }
 
-    public void setPlayerMessage(Player player, String message, Database.MessageType type) {
-        if (player == null || message == null || message.trim().isEmpty()) return;
+    public void handlePlayerFirstJoin(Player player) {
+        String format = messageManager.getFirstJoin();
+        String finalMsg = format.replace("{player}", player.getName());
+        broadcast(finalMsg);
+    }
 
+    public void setPlayerWelcomeMessage(Player player, String message) {
+        setPlayerMessage(player, message, Database.MessageType.WELCOME);
+    }
+
+    public void setPlayerQuitMessage(Player player, String message) {
+        setPlayerMessage(player, message, Database.MessageType.QUIT);
+    }
+
+    private void setPlayerMessage(Player player, String message, Database.MessageType type) {
         if (checkLengthMessage(message) > plugin.getConfig().getInt("messages.allowed-symbols")) {
             MessageUtils.sendMessage(player, messageManager.getToManySymbols());
             return;
@@ -71,68 +150,45 @@ public class WelcomeCore {
 
         async(() -> {
             try {
-                boolean success = db.setMessage(player.getUniqueId(), player.getName(), message, type);
-                sync(() -> {
-                    if (success) {
-                        MessageUtils.sendMessage(player, messageManager.getSetSuccess());
-                    } else {
-                        MessageUtils.sendMessage(player, messageManager.getError());
-                    }
-                });
-            } catch (SQLException e) {
-                sync(() -> {
-                    MessageUtils.sendMessage(player, messageManager.getErrorDatabase());
-                    plugin.getLogger().severe("Database error: " + e.getMessage());
-                });
-            }
-        });
-    }
-
-    private int checkLengthMessage(String message) {
-        if (message == null) return 0;
-        String cleanMessage = MessageUtils.stripColors(message).replace(" ", "");
-        return cleanMessage.length();
-    }
-
-    public void clearPlayerMessage(Player player, Database.MessageType type) {
-        if (player == null) return;
-
-        async(() -> {
-            try {
-                if (!db.hasMessage(player.getUniqueId(), type)) {
-                    sync(() -> MessageUtils.sendMessage(player, messageManager.getClearNoMessage()));
-                    return;
-                }
-
-                boolean success = db.deleteMessage(player.getUniqueId(), type);
-                sync(() -> {
-                    if (success) {
-                        MessageUtils.sendMessage(player, messageManager.getClearSuccess());
-                    } else {
-                        MessageUtils.sendMessage(player, messageManager.getClearNoMessage());
-                    }
-                });
+                db.setMessage(player.getUniqueId(), player.getName(), message, type);
+                loadPlayerData(player);
+                sync(() -> MessageUtils.sendMessage(player, messageManager.getSetSuccess()));
             } catch (SQLException e) {
                 sync(() -> MessageUtils.sendMessage(player, messageManager.getErrorDatabase()));
             }
         });
     }
 
-    public void setPlayerWelcomeMessage(Player player, String message) { setPlayerMessage(player, message, Database.MessageType.WELCOME); }
-    public void setPlayerQuitMessage(Player player, String message) { setPlayerMessage(player, message, Database.MessageType.QUIT); }
-    public void clearPlayerJoinMessage(Player player) { clearPlayerMessage(player, Database.MessageType.WELCOME); }
-    public void clearPlayerQuitMessage(Player player) { clearPlayerMessage(player, Database.MessageType.QUIT); }
+    public void clearPlayerJoinMessage(Player player) {
+        clearPlayerMessage(player, Database.MessageType.WELCOME);
+    }
 
-    private void sendMessageToAll(String rawMessage) {
+    public void clearPlayerQuitMessage(Player player) {
+        clearPlayerMessage(player, Database.MessageType.QUIT);
+    }
+
+    private void clearPlayerMessage(Player player, Database.MessageType type) {
         async(() -> {
-            String coloredMessage = MessageUtils.colorize(rawMessage);
-
-            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                onlinePlayer.sendMessage(coloredMessage);
+            try {
+                db.deleteMessage(player.getUniqueId(), type);
+                loadPlayerData(player);
+                sync(() -> MessageUtils.sendMessage(player, messageManager.getClearSuccess()));
+            } catch (SQLException e) {
+                sync(() -> MessageUtils.sendMessage(player, messageManager.getErrorDatabase()));
             }
         });
     }
-    
+
+    public void broadcast(String rawMessage) {
+        String colored = MessageUtils.colorize(rawMessage);
+        Bukkit.broadcastMessage(colored);
+    }
+
+    private int checkLengthMessage(String message) {
+        if (message == null) return 0;
+        return MessageUtils.stripColors(message).replace(" ", "").length();
+    }
+
     public void async(Runnable runnable) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable);
     }
@@ -143,5 +199,18 @@ public class WelcomeCore {
 
     public void close() {
         if (db != null) db.close();
+    }
+
+    public void reload() {
+        playerCache.clear();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            async(() -> {
+                try {
+                    String join = db.getMessage(player.getUniqueId(), Database.MessageType.WELCOME);
+                    String quit = db.getMessage(player.getUniqueId(), Database.MessageType.QUIT);
+                    playerCache.put(player.getUniqueId(), new PlayerCache(join, quit));
+                } catch (SQLException ignored) {}
+            });
+        }
     }
 }

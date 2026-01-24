@@ -6,7 +6,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.yabogvk.ybvwelcome.YBVWelcome;
 
 public class PlayerJoinListener implements Listener {
@@ -25,13 +24,12 @@ public class PlayerJoinListener implements Listener {
             event.setJoinMessage(null);
         }
 
-        if (config.getBoolean("messages.join.firstjoin-enabled", true) && !player.hasPlayedBefore()) {
-            plugin.getCore().handlePlayerFirstJoin(player);
+        if (!config.getBoolean("messages.join.enabled", true)) {
             return;
         }
 
-        if (config.getBoolean("messages.join.enabled", true)) {
-            plugin.getCore().handlePlayerJoin(player);
-        }
+        boolean isFirst = !player.hasPlayedBefore() && config.getBoolean("messages.join.firstjoin-enabled", true);
+
+        plugin.getCore().loadAndJoin(player, isFirst);
     }
 }
