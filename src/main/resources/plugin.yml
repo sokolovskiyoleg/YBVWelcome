@@ -5,6 +5,7 @@ api-version: '1.21'
 author: yabogvk
 website: https://github.com/sokolovskiyoleg
 description: Настрой сообщения о входе/выходе
+softdepend: ["PlaceholderAPI"]
 
 commands:
   ybvwelcome:

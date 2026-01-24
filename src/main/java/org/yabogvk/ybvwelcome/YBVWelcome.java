@@ -47,6 +47,10 @@ public final class YBVWelcome extends JavaPlugin {
             getLogger().log(Level.SEVERE, "Could not initialize database! Disabling plugin...", e);
             Bukkit.getPluginManager().disablePlugin(this);
         }
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+        } else {
+            getLogger().warning("Не найден PlaceholderAPI. Плейсхолдеры papi не будут работать");
+        }
     }
 
     @Override
@@ -63,10 +67,6 @@ public final class YBVWelcome extends JavaPlugin {
 
     public MessageManager getMessageManager() {
         return messageManager;
-    }
-
-    public static MessageManager getMessageManagerStatic() {
-        return instance.messageManager;
     }
 
     public FileConfiguration getMessagesConfig() {
