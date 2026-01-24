@@ -53,9 +53,7 @@ public class WelcomeCommand extends AbstractCommand {
     private void handleReload(CommandSender sender) {
         if (noPerm(sender, "ybvwelcome.admin")) return;
 
-        instance.reloadConfig();
-        if (messageManager != null) messageManager.reload();
-
+        instance.reload();
         MessageUtils.sendMessage(sender, messageManager.getReloadSuccess());
     }
 

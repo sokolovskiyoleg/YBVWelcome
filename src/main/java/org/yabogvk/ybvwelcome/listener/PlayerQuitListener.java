@@ -24,8 +24,10 @@ public class PlayerQuitListener implements Listener {
             event.setQuitMessage(null);
         }
 
-        if (config.getBoolean("messages.quit.enabled", true)) {
-            plugin.getCore().handlePlayerQuit(player);
+        if (!config.getBoolean("messages.quit.enabled", true)) {
+            return;
         }
+
+        plugin.getCore().handlePlayerQuit(player);
     }
 }

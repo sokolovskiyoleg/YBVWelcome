@@ -111,6 +111,10 @@ public final class YBVWelcome extends JavaPlugin {
         if (messageManager != null) {
             messageManager.reload();
         }
-        getLogger().info("Configuration reloaded successfully!");
+        if (core != null) {
+            core.reload();
+        }
+
+         ColorizerProvider.init(getConfig());
     }
 }
