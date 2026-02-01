@@ -1,5 +1,6 @@
 package org.yabogvk.ybvwelcome.core;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -8,15 +9,15 @@ import org.bukkit.entity.Player;
 import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.db.Database;
 import org.yabogvk.ybvwelcome.managers.MessageManager;
-import org.yabogvk.ybvwelcome.model.PlayerCache;
+import org.yabogvk.ybvwelcome.model.PlayerMessages;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
-import me.clip.placeholderapi.PlaceholderAPI;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 public class WelcomeCore {
     private final YBVWelcome plugin;
@@ -24,7 +25,7 @@ public class WelcomeCore {
     private final MessageService messageService;
     private final Database db;
 
-    private final Map<UUID, PlayerCache> playerCache = new ConcurrentHashMap<>();
+    private final Map<UUID, PlayerMessages> playerCache = new ConcurrentHashMap<>();
 
     public WelcomeCore(YBVWelcome plugin, MessageManager messageManager, Database database) {
         this.plugin = plugin;
@@ -33,48 +34,54 @@ public class WelcomeCore {
         this.messageService = new MessageService(messageManager);
     }
 
-
-
     public void loadPlayerData(Player player) {
-        async(() -> {
+        CompletableFuture.runAsync(() -> {
             try {
-                String join = db.getMessage(player.getUniqueId(), Database.MessageType.WELCOME);
-                String quit = db.getMessage(player.getUniqueId(), Database.MessageType.QUIT);
-                playerCache.put(player.getUniqueId(), new PlayerCache(join, quit));
-            } catch (SQLException e) {
-                plugin.getLogger().warning("Ошибка загрузки данных для " + player.getName());
+                PlayerMessages messages = db.getMessages(player.getUniqueId());
+                updatePlayerCache(player.getUniqueId(), messages);
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.WARNING, "Ошибка загрузки данных для " + player.getName(), e);
             }
-        });
+        }, runnable -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable));
     }
 
     public void loadAndJoin(Player player, boolean isFirstJoin) {
-        async(() -> {
+        CompletableFuture.supplyAsync(() -> {
             try {
-                String join = db.getMessage(player.getUniqueId(), Database.MessageType.WELCOME);
-                String quit = db.getMessage(player.getUniqueId(), Database.MessageType.QUIT);
-                playerCache.put(player.getUniqueId(), new PlayerCache(join, quit));
-
-                sync(() -> {
-                    if (isFirstJoin) {
-                        handlePlayerFirstJoin(player);
-                    } else {
-                        handlePlayerJoin(player);
-                    }
-                });
-            } catch (SQLException e) {
-                sync(() -> handlePlayerJoin(player));
+                return db.getMessages(player.getUniqueId());
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.WARNING, "Ошибка загрузки данных для " + player.getName() + ", используется сообщение по-умолчанию.", e);
+                return new PlayerMessages(null, null);
             }
+        }, runnable -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable))
+        .thenAccept(messages -> {
+            updatePlayerCache(player.getUniqueId(), messages);
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                if (isFirstJoin) {
+                    handlePlayerFirstJoin(player);
+                } else {
+                    handlePlayerJoin(player);
+                }
+            });
         });
     }
 
+    private void updatePlayerCache(UUID uuid, PlayerMessages messages) {
+        if (!messages.hasNoMessages()) {
+            playerCache.put(uuid, messages);
+        } else {
+            playerCache.remove(uuid);
+        }
+    }
+
     public void handlePlayerJoin(Player player) {
-        PlayerCache data = playerCache.get(player.getUniqueId());
+        PlayerMessages data = playerCache.get(player.getUniqueId());
         String raw = messageService.resolveJoinMessage(player, data);
         broadcast(raw, player);
     }
 
     public void handlePlayerQuit(Player player) {
-        PlayerCache data = playerCache.get(player.getUniqueId());
+        PlayerMessages data = playerCache.get(player.getUniqueId());
         String raw = messageService.resolveQuitMessage(player, data);
 
         broadcast(raw, player);
@@ -118,20 +125,20 @@ public class WelcomeCore {
     }
 
     private void setPlayerMessage(Player player, String message, Database.MessageType type) {
-        if (checkLengthMessage(message) > plugin.getConfig().getInt("messages.allowed-symbols")) {
+        if (checkLengthMessage(message) > plugin.getSettings().allowedSymbols) {
             MessageUtils.sendMessage(player, messageManager.getToManySymbols());
             return;
         }
 
-        async(() -> {
+        CompletableFuture.runAsync(() -> {
             try {
                 db.setMessage(player.getUniqueId(), player.getName(), message, type);
                 loadPlayerData(player);
-                sync(() -> MessageUtils.sendMessage(player, messageManager.getSetSuccess()));
-            } catch (SQLException e) {
-                sync(() -> MessageUtils.sendMessage(player, messageManager.getErrorDatabase()));
+                Bukkit.getScheduler().runTask(plugin, () -> MessageUtils.sendMessage(player, messageManager.getSetSuccess()));
+            } catch (Exception e) {
+                Bukkit.getScheduler().runTask(plugin, () -> MessageUtils.sendMessage(player, messageManager.getErrorDatabase()));
             }
-        });
+        }, runnable -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable));
     }
 
     public void clearPlayerJoinMessage(Player player) {
@@ -143,15 +150,15 @@ public class WelcomeCore {
     }
 
     private void clearPlayerMessage(Player player, Database.MessageType type) {
-        async(() -> {
+        CompletableFuture.runAsync(() -> {
             try {
                 db.deleteMessage(player.getUniqueId(), type);
                 loadPlayerData(player);
-                sync(() -> MessageUtils.sendMessage(player, messageManager.getClearSuccess()));
-            } catch (SQLException e) {
-                sync(() -> MessageUtils.sendMessage(player, messageManager.getErrorDatabase()));
+                Bukkit.getScheduler().runTask(plugin, () -> MessageUtils.sendMessage(player, messageManager.getClearSuccess()));
+            } catch (Exception e) {
+                Bukkit.getScheduler().runTask(plugin, () -> MessageUtils.sendMessage(player, messageManager.getErrorDatabase()));
             }
-        });
+        }, runnable -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable));
     }
 
     private void broadcast(String raw, Player player) {
@@ -159,7 +166,7 @@ public class WelcomeCore {
 
         String formatted = raw.replace("{player}", player.getName());
 
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+        if (plugin.isPlaceholderAPIEnabled()) {
             formatted = PlaceholderAPI.setPlaceholders(player, formatted);
         }
 
@@ -173,14 +180,6 @@ public class WelcomeCore {
         return MessageUtils.stripColors(message).replace(" ", "").length();
     }
 
-    public void async(Runnable runnable) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable);
-    }
-
-    public void sync(Runnable runnable) {
-        Bukkit.getScheduler().runTask(plugin, runnable);
-    }
-
     public void close() {
         if (db != null) db.close();
     }
@@ -188,13 +187,7 @@ public class WelcomeCore {
     public void reload() {
         playerCache.clear();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            async(() -> {
-                try {
-                    String join = db.getMessage(player.getUniqueId(), Database.MessageType.WELCOME);
-                    String quit = db.getMessage(player.getUniqueId(), Database.MessageType.QUIT);
-                    playerCache.put(player.getUniqueId(), new PlayerCache(join, quit));
-                } catch (SQLException ignored) {}
-            });
+            loadPlayerData(player);
         }
     }
 }

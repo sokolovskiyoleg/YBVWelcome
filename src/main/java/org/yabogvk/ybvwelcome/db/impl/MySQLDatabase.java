@@ -5,7 +5,9 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.db.Database;
+import org.yabogvk.ybvwelcome.model.PlayerMessages;
 import org.yabogvk.ybvwelcome.utils.SecurityUtils;
 
 import java.sql.*;
@@ -15,9 +17,10 @@ import java.util.logging.Logger;
 
 public class MySQLDatabase implements Database {
     private final HikariDataSource dataSource;
-    private static final Logger logger = Logger.getLogger("YBVWelcome-DB");
+    private final Logger logger;
 
     public MySQLDatabase(ConfigurationSection config) {
+        this.logger = YBVWelcome.getInstance().getLogger();
         HikariConfig hikariConfig = new HikariConfig();
 
         String host = config.getString("host", "localhost");
@@ -66,6 +69,25 @@ public class MySQLDatabase implements Database {
             }
         }
         return null;
+    }
+
+    @Override
+    public @NotNull PlayerMessages getMessages(@NotNull UUID uuid) throws SQLException {
+        String sql = "SELECT join_message, quit_message FROM player_messages WHERE uuid = ?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String joinMsg = rs.getString("join_message");
+                    String quitMsg = rs.getString("quit_message");
+                    return new PlayerMessages(
+                            (joinMsg != null && !joinMsg.isEmpty()) ? SecurityUtils.sanitizeMessageContent(joinMsg) : null,
+                            (quitMsg != null && !quitMsg.isEmpty()) ? SecurityUtils.sanitizeMessageContent(quitMsg) : null
+                    );
+                }
+            }
+        }
+        return new PlayerMessages(null, null);
     }
 
     @Override

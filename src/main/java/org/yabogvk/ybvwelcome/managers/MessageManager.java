@@ -6,15 +6,19 @@ import org.bukkit.entity.Player;
 import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MessageManager {
-    private final YBVWelcome plugin;
-    private FileConfiguration config;
 
+    private final YBVWelcome plugin;
     private final Map<String, String> cachedMessages = new HashMap<>();
+    private final Map<String, List<String>> cachedLists = new HashMap<>();
+    private final Map<String, Map<String, String>> cachedGroupMessages = new HashMap<>();
+    private boolean groupMessagesEnabled;
 
     public MessageManager(YBVWelcome plugin) {
         this.plugin = plugin;
@@ -22,40 +26,76 @@ public class MessageManager {
     }
 
     public void reload() {
-        this.config = plugin.getMessagesConfig();
+        FileConfiguration config = plugin.getMessagesConfig();
         cachedMessages.clear();
+        cachedLists.clear();
+        cachedGroupMessages.clear();
+
+        for (String key : config.getKeys(true)) {
+            if (config.isString(key)) {
+                cachedMessages.put(key, MessageUtils.colorize(config.getString(key)));
+            }
+        }
+
+        for (String key : config.getKeys(true)) {
+            if (config.isList(key)) {
+                cachedLists.put(key, config.getStringList(key).stream()
+                        .map(MessageUtils::colorize)
+                        .collect(Collectors.toList()));
+            }
+        }
+
+        groupMessagesEnabled = config.getBoolean("group-messages.enabled", false);
+        if (groupMessagesEnabled) {
+            ConfigurationSection groups = config.getConfigurationSection("group-messages.list");
+            if (groups != null) {
+                for (String groupName : groups.getKeys(false)) {
+                    ConfigurationSection groupSection = groups.getConfigurationSection(groupName);
+                    if (groupSection != null) {
+                        Map<String, String> groupData = new HashMap<>();
+                        groupData.put("permission", groupSection.getString("permission"));
+                        groupData.put("join", MessageUtils.colorize(groupSection.getString("join")));
+                        groupData.put("quit", MessageUtils.colorize(groupSection.getString("quit")));
+                        cachedGroupMessages.put(groupName, groupData);
+                    }
+                }
+            }
+        }
     }
 
     private String get(String path, String defaultValue) {
-        return cachedMessages.computeIfAbsent(path, key -> {
-            String raw = config.getString(key, defaultValue);
-            return MessageUtils.colorize(raw);
-        });
+        return cachedMessages.getOrDefault(path, defaultValue);
     }
 
+    private List<String> getList(String path) {
+        return cachedLists.getOrDefault(path, Collections.emptyList());
+    }
 
     public String getGroupMessage(Player player, String type) {
-        if (!config.getBoolean("group-messages.enabled", false)) return null;
+        if (!groupMessagesEnabled) return null;
 
-        ConfigurationSection groups = config.getConfigurationSection("group-messages.list");
-        if (groups == null) return null;
-
-        for (String key : groups.getKeys(false)) {
-            String perm = groups.getString(key + ".permission");
+        for (Map.Entry<String, Map<String, String>> entry : cachedGroupMessages.entrySet()) {
+            Map<String, String> groupData = entry.getValue();
+            String perm = groupData.get("permission");
 
             if (perm == null || perm.isEmpty() || player.hasPermission(perm)) {
-                String raw = groups.getString(key + "." + type);
-                return MessageUtils.colorize(raw);
+                return groupData.get(type);
             }
         }
         return null;
     }
 
-    public List<String> getRandomWelcomes() { return plugin.getMessagesConfig().getStringList("random-welcomes"); }
+    public List<String> getRandomWelcomes() {
+        return getList("random-welcomes");
+    }
 
-    public String getWelcomeButtonText() { return plugin.getMessagesConfig().getString("welcome-button.text", " [ПРИВЕТСТВОВАТЬ]"); }
+    public String getWelcomeButtonText() {
+        return get("welcome-button.text", " [ПРИВЕТСТВОВАТЬ]");
+    }
 
-    public String getWelcomeButtonHover() { return plugin.getMessagesConfig().getString("welcome-button.hover", "Нажми сюда!"); }
+    public String getWelcomeButtonHover() {
+        return get("welcome-button.hover", "Нажми сюда!");
+    }
 
     public String getJoinDefault() { return get("join.default", "&fприсоединился"); }
 
@@ -94,6 +134,7 @@ public class MessageManager {
     public String getFormatJoinDefault() { return get("formats.join.default", "&8[&a+&8] &f{player} {message}"); }
 
     public String getFormatQuitCustom() { return get("formats.quit.custom", "&8[&c-&8] &f{player}: &f{message}"); }
+
     public String getFormatQuitDefault() { return get("formats.quit.default", "&8[&c-&8] &f{player} {message}"); }
 
     public String getFirstJoin() { return get("formats.first_join", "&f{player} &fприсоединился впервые!"); }

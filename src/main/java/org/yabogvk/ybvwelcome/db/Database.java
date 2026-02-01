@@ -2,6 +2,7 @@ package org.yabogvk.ybvwelcome.db;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.yabogvk.ybvwelcome.model.PlayerMessages;
 
 import java.sql.SQLException;
 import java.util.UUID;
@@ -24,6 +25,9 @@ public interface Database {
 
     @Nullable
     String getMessage(@NotNull UUID uuid, @NotNull MessageType type) throws SQLException;
+
+    @NotNull
+    PlayerMessages getMessages(@NotNull UUID uuid) throws SQLException;
 
     boolean setMessage(@NotNull UUID uuid, @NotNull String playerName,
                        @NotNull String message, @NotNull MessageType type) throws SQLException;

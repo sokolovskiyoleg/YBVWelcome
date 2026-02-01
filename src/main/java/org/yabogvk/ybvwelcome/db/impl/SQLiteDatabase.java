@@ -4,7 +4,9 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.db.Database;
+import org.yabogvk.ybvwelcome.model.PlayerMessages;
 import org.yabogvk.ybvwelcome.utils.SecurityUtils;
 
 import java.io.File;
@@ -15,9 +17,10 @@ import java.util.logging.Logger;
 
 public class SQLiteDatabase implements Database {
     private final HikariDataSource dataSource;
-    private static final Logger logger = Logger.getLogger("YBVWelcome-DB");
+    private final Logger logger;
 
     public SQLiteDatabase(File file) throws SQLException {
+        this.logger = YBVWelcome.getInstance().getLogger();
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:sqlite:" + file.getAbsolutePath());
         config.setDriverClassName("org.sqlite.JDBC");
@@ -38,8 +41,9 @@ public class SQLiteDatabase implements Database {
     private void setupDatabase() {
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute("PRAGMA journal_mode = DELETE");
-            stmt.execute("PRAGMA synchronous = NORMAL");
+            stmt.execute("PRAGMA journal_mode = WAL;");
+            stmt.execute("PRAGMA synchronous = NORMAL;");
+            stmt.execute("PRAGMA busy_timeout = 3000;");
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Could not set up SQLite pragmas", e);
         }
@@ -73,6 +77,25 @@ public class SQLiteDatabase implements Database {
             }
         }
         return null;
+    }
+
+    @Override
+    public @NotNull PlayerMessages getMessages(@NotNull UUID uuid) throws SQLException {
+        String sql = "SELECT join_message, quit_message FROM player_messages WHERE uuid = ?";
+        try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, uuid.toString());
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    String joinMsg = rs.getString("join_message");
+                    String quitMsg = rs.getString("quit_message");
+                    return new PlayerMessages(
+                            (joinMsg != null && !joinMsg.isEmpty()) ? SecurityUtils.sanitizeMessageContent(joinMsg) : null,
+                            (quitMsg != null && !quitMsg.isEmpty()) ? SecurityUtils.sanitizeMessageContent(quitMsg) : null
+                    );
+                }
+            }
+        }
+        return new PlayerMessages(null, null);
     }
 
     @Override

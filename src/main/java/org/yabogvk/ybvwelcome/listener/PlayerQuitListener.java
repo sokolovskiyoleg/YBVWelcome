@@ -1,30 +1,31 @@
 package org.yabogvk.ybvwelcome.listener;
 
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.yabogvk.ybvwelcome.YBVWelcome;
+import org.yabogvk.ybvwelcome.config.Settings;
 
 public class PlayerQuitListener implements Listener {
     private final YBVWelcome plugin;
+    private final Settings settings;
 
     public PlayerQuitListener(YBVWelcome plugin) {
         this.plugin = plugin;
+        this.settings = plugin.getSettings();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerQuit(PlayerQuitEvent event) {
-        FileConfiguration config = plugin.getConfig();
         Player player = event.getPlayer();
 
-        if (config.getBoolean("messages.quit.disable-vanilla", true)) {
+        if (settings.quitDisableVanilla) {
             event.setQuitMessage(null);
         }
 
-        if (!config.getBoolean("messages.quit.enabled", true)) {
+        if (!settings.quitEnabled) {
             return;
         }
 
