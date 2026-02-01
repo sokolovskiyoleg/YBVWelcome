@@ -12,11 +12,11 @@ public class DatabaseProvider {
     public static Database database;
 
     public static void init(YBVWelcome plugin) throws SQLException {
-        ConfigurationSection config = plugin.getConfig().getConfigurationSection("database");
-        String type = (config != null) ? config.getString("type", "SQLITE").toUpperCase() : "SQLITE";
+        String type = plugin.getSettings().databaseType;
 
-        if (type.equals("MYSQL")) {
-            database = new MySQLDatabase(config.getConfigurationSection("mysql"));
+        if (type.equalsIgnoreCase("MYSQL")) {
+            ConfigurationSection config = plugin.getConfig().getConfigurationSection("database.mysql");
+            database = new MySQLDatabase(config);
         } else {
             database = new SQLiteDatabase(new File(plugin.getDataFolder(), "database.db"));
         }

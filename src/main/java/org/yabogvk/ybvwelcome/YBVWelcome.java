@@ -7,6 +7,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.yabogvk.ybvwelcome.color.ColorizerProvider;
 import org.yabogvk.ybvwelcome.commands.WelcomeCommand;
+import org.yabogvk.ybvwelcome.config.Settings;
 import org.yabogvk.ybvwelcome.core.WelcomeCore;
 import org.yabogvk.ybvwelcome.db.DatabaseProvider;
 import org.yabogvk.ybvwelcome.listener.PlayerJoinListener;
@@ -26,12 +27,15 @@ public final class YBVWelcome extends JavaPlugin {
     private File messagesFile;
     private WelcomeCore core;
     private MessageManager messageManager;
+    private Settings settings;
+    private boolean placeholderAPIEnabled;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         loadMessagesConfig();
         instance = this;
+        settings = new Settings(this);
         ColorizerProvider.init(getConfig());
         messageManager = new MessageManager(this);
         try {
@@ -47,9 +51,9 @@ public final class YBVWelcome extends JavaPlugin {
             getLogger().log(Level.SEVERE, "Could not initialize database! Disabling plugin...", e);
             Bukkit.getPluginManager().disablePlugin(this);
         }
-        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-        } else {
-            getLogger().warning("PlaceholderAPI not found. PAPI placeholders will not work.");
+        this.placeholderAPIEnabled = Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI");
+        if (!placeholderAPIEnabled) {
+            getLogger().log(Level.WARNING, "PlaceholderAPI not found. PAPI placeholders will not work.");
         }
     }
 
@@ -69,8 +73,16 @@ public final class YBVWelcome extends JavaPlugin {
         return messageManager;
     }
 
+    public Settings getSettings() {
+        return settings;
+    }
+
     public FileConfiguration getMessagesConfig() {
         return messagesConfig;
+    }
+
+    public boolean isPlaceholderAPIEnabled() {
+        return placeholderAPIEnabled;
     }
 
     private void registerListener() {
@@ -99,7 +111,7 @@ public final class YBVWelcome extends JavaPlugin {
                 saveMessagesConfig();
             }
         } catch (Exception e) {
-            getLogger().warning("Could not load default messages configuration: " + e.getMessage());
+            getLogger().log(Level.WARNING, "Could not load default messages configuration: " + e.getMessage());
         }
     }
 
@@ -118,6 +130,7 @@ public final class YBVWelcome extends JavaPlugin {
     public void reload() {
         reloadConfig();
         reloadMessagesConfig();
+        settings.load();
         if (messageManager != null) {
             messageManager.reload();
         }
