@@ -1,6 +1,5 @@
 package org.yabogvk.ybvwelcome.core;
 
-import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -85,22 +84,19 @@ public class WelcomeCore {
     public void handlePlayerQuit(Player player) {
         PlayerMessages data = playerCache.get(player.getUniqueId());
         String raw = messageService.resolveQuitMessage(player, data);
-
         broadcast(raw, player);
-        playerCache.remove(player.getUniqueId());
     }
 
     public void handlePlayerFirstJoin(Player target) {
         String rawMessage = messageManager.getFirstJoin();
         if (rawMessage == null || rawMessage.equalsIgnoreCase("none")) return;
 
-        String formatted = rawMessage.replace("{player}", target.getName());
-        Component mainComponent = MessageUtils.parse(formatted);
+        Component mainComponent = MessageUtils.parse(rawMessage, target);
 
         final Set<UUID> clickedPlayers = ConcurrentHashMap.newKeySet();
 
-        Component button = MessageUtils.parse(messageManager.getWelcomeButtonText())
-                .hoverEvent(HoverEvent.showText(MessageUtils.parse(messageManager.getWelcomeButtonHover())))
+        Component button = MessageUtils.parse(messageManager.getWelcomeButtonText(), target)
+                .hoverEvent(HoverEvent.showText(MessageUtils.parse(messageManager.getWelcomeButtonHover(), target)))
                 .clickEvent(ClickEvent.callback(audience -> {
                     if (audience instanceof Player clicker) {
                         if (clicker.getUniqueId().equals(target.getUniqueId())) {
@@ -173,14 +169,7 @@ public class WelcomeCore {
     private void broadcast(String raw, Player player) {
         if (raw == null || raw.equalsIgnoreCase("none")) return;
 
-        String formatted = raw.replace("{player}", player.getName());
-
-        if (plugin.isPlaceholderAPIEnabled()) {
-            formatted = PlaceholderAPI.setPlaceholders(player, formatted);
-        }
-
-        Component component = MessageUtils.parse(formatted);
-
+        Component component = MessageUtils.parse(raw, player);
         Bukkit.broadcast(component);
     }
 
