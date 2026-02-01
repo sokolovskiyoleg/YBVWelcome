@@ -36,7 +36,7 @@ public final class YBVWelcome extends JavaPlugin {
         loadMessagesConfig();
         instance = this;
         settings = new Settings(this);
-        ColorizerProvider.init(getConfig());
+        ColorizerProvider.init(settings);
         messageManager = new MessageManager(this);
         try {
             DatabaseProvider.init(this);
@@ -138,6 +138,6 @@ public final class YBVWelcome extends JavaPlugin {
             core.reload();
         }
 
-         ColorizerProvider.init(getConfig());
+         ColorizerProvider.init(settings);
     }
 }
