@@ -12,8 +12,10 @@ import org.yabogvk.ybvwelcome.managers.MessageManager;
 import org.yabogvk.ybvwelcome.model.PlayerMessages;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,23 +49,23 @@ public class WelcomeCore {
 
     public void loadAndJoin(Player player, boolean isFirstJoin) {
         CompletableFuture.supplyAsync(() -> {
-            try {
-                return db.getMessages(player.getUniqueId());
-            } catch (Exception e) {
-                plugin.getLogger().log(Level.WARNING, "Ошибка загрузки данных для " + player.getName() + ", используется сообщение по-умолчанию.", e);
-                return new PlayerMessages(null, null);
-            }
-        }, runnable -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable))
-        .thenAccept(messages -> {
-            updatePlayerCache(player.getUniqueId(), messages);
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                if (isFirstJoin) {
-                    handlePlayerFirstJoin(player);
-                } else {
-                    handlePlayerJoin(player);
-                }
-            });
-        });
+                    try {
+                        return db.getMessages(player.getUniqueId());
+                    } catch (Exception e) {
+                        plugin.getLogger().log(Level.WARNING, "Ошибка загрузки данных для " + player.getName() + ", используется сообщение по-умолчанию.", e);
+                        return new PlayerMessages(null, null);
+                    }
+                }, runnable -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable))
+                .thenAccept(messages -> {
+                    updatePlayerCache(player.getUniqueId(), messages);
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        if (isFirstJoin) {
+                            handlePlayerFirstJoin(player);
+                        } else {
+                            handlePlayerJoin(player);
+                        }
+                    });
+                });
     }
 
     private void updatePlayerCache(UUID uuid, PlayerMessages messages) {
@@ -95,13 +97,20 @@ public class WelcomeCore {
         String formatted = rawMessage.replace("{player}", target.getName());
         Component mainComponent = MessageUtils.parse(formatted);
 
+        final Set<UUID> clickedPlayers = ConcurrentHashMap.newKeySet();
+
         Component button = MessageUtils.parse(messageManager.getWelcomeButtonText())
                 .hoverEvent(HoverEvent.showText(MessageUtils.parse(messageManager.getWelcomeButtonHover())))
                 .clickEvent(ClickEvent.callback(audience -> {
                     if (audience instanceof Player clicker) {
-                        sendRandomWelcome(clicker, target);
+                        if (clicker.getUniqueId().equals(target.getUniqueId())) {
+                            return;
+                        }
+                        if (clickedPlayers.add(clicker.getUniqueId())) {
+                            sendRandomWelcome(clicker, target);
+                        }
                     }
-                }));
+                }, builder -> builder.uses(-1).lifetime(Duration.ofMinutes(1))));
 
         Bukkit.broadcast(mainComponent.append(button));
     }
@@ -170,9 +179,9 @@ public class WelcomeCore {
             formatted = PlaceholderAPI.setPlaceholders(player, formatted);
         }
 
-        String colored = MessageUtils.colorize(formatted);
+        Component component = MessageUtils.parse(formatted);
 
-        Bukkit.broadcastMessage(colored);
+        Bukkit.broadcast(component);
     }
 
     private int checkLengthMessage(String message) {
