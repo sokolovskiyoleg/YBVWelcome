@@ -10,12 +10,13 @@ import java.util.regex.Pattern;
 public class MessageUtils {
 
     private static final Pattern STRIP_COLOR_PATTERN = Pattern.compile("(?i)" + String.valueOf('&') + "[0-9A-FK-ORX]");
+    private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.builder().hexColors().build();
 
     public static Component parse(String message) {
         if (message == null || message.isEmpty()) return Component.empty();
         String colored = colorize(message);
 
-        return LegacyComponentSerializer.legacySection().deserialize(colored);
+        return LEGACY_SERIALIZER.deserialize(colored);
     }
 
 
