@@ -110,7 +110,7 @@ public class WelcomeCore {
                             sendRandomWelcome(clicker, target);
                         }
                     }
-                }, builder -> builder.uses(-1).lifetime(Duration.ofMinutes(1))));
+                }, builder -> builder.uses(-1).lifetime(Duration.ofMinutes(10))));
 
         Bukkit.broadcast(mainComponent.append(button));
     }
@@ -122,7 +122,7 @@ public class WelcomeCore {
         String randomMsg = variants.get(new java.util.Random().nextInt(variants.size()));
         String finalMsg = randomMsg.replace("{player}", target.getName());
 
-        clicker.chat(MessageUtils.colorize(finalMsg));
+        clicker.chat(finalMsg);
     }
 
     public void setPlayerWelcomeMessage(Player player, String message) {

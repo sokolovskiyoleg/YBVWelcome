@@ -7,6 +7,8 @@ public class Settings {
 
     private final YBVWelcome plugin;
 
+    public String serializer;
+
     public String databaseType;
 
     public int allowedSymbols;
@@ -24,6 +26,8 @@ public class Settings {
 
     public void load() {
         FileConfiguration config = plugin.getConfig();
+
+        serializer = config.getString("serializer", "LEGACY");
 
         databaseType = config.getString("database.type", "sqlite");
 

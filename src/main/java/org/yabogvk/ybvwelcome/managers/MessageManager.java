@@ -4,13 +4,11 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.yabogvk.ybvwelcome.YBVWelcome;
-import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class MessageManager {
 
@@ -33,15 +31,13 @@ public class MessageManager {
 
         for (String key : config.getKeys(true)) {
             if (config.isString(key)) {
-                cachedMessages.put(key, MessageUtils.colorize(config.getString(key)));
+                cachedMessages.put(key, config.getString(key));
             }
         }
 
         for (String key : config.getKeys(true)) {
             if (config.isList(key)) {
-                cachedLists.put(key, config.getStringList(key).stream()
-                        .map(MessageUtils::colorize)
-                        .collect(Collectors.toList()));
+                cachedLists.put(key, config.getStringList(key));
             }
         }
 
@@ -54,8 +50,8 @@ public class MessageManager {
                     if (groupSection != null) {
                         Map<String, String> groupData = new HashMap<>();
                         groupData.put("permission", groupSection.getString("permission"));
-                        groupData.put("join", MessageUtils.colorize(groupSection.getString("join")));
-                        groupData.put("quit", MessageUtils.colorize(groupSection.getString("quit")));
+                        groupData.put("join", groupSection.getString("join"));
+                        groupData.put("quit", groupSection.getString("quit"));
                         cachedGroupMessages.put(groupName, groupData);
                     }
                 }
