@@ -7,10 +7,13 @@ public class Settings {
 
     private final YBVWelcome plugin;
 
+    // General
     public String serializer;
 
+    // Database
     public String databaseType;
 
+    // Messages
     public int allowedSymbols;
     public boolean joinDisableVanilla;
     public boolean joinEnabled;
@@ -18,8 +21,8 @@ public class Settings {
     public boolean quitDisableVanilla;
     public boolean quitEnabled;
 
+    // Commands
     public int commandCooldown;
-
 
     public Settings(YBVWelcome plugin) {
         this.plugin = plugin;
@@ -27,12 +30,15 @@ public class Settings {
     }
 
     public void load() {
-        FileConfiguration config = plugin.getConfig();
+        FileConfiguration config = plugin.getConfigManager().getMainConfig();
 
+        // General
         serializer = config.getString("serializer", "LEGACY");
 
+        // Database
         databaseType = config.getString("database.type", "sqlite");
 
+        // Messages
         allowedSymbols = config.getInt("messages.allowed-symbols", 100);
         joinDisableVanilla = config.getBoolean("messages.join.disable-vanilla", true);
         joinEnabled = config.getBoolean("messages.join.enabled", true);
@@ -40,6 +46,7 @@ public class Settings {
         quitDisableVanilla = config.getBoolean("messages.quit.disable-vanilla", true);
         quitEnabled = config.getBoolean("messages.quit.enabled", true);
 
+        // Commands
         commandCooldown = config.getInt("commands.cooldown", 5);
     }
 }

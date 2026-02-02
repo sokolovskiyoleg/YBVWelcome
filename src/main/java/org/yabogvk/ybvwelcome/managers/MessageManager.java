@@ -24,7 +24,7 @@ public class MessageManager {
     }
 
     public void reload() {
-        FileConfiguration config = plugin.getMessagesConfig();
+        FileConfiguration config = plugin.getConfigManager().getMessagesConfig();
         cachedMessages.clear();
         cachedLists.clear();
         cachedGroupMessages.clear();
