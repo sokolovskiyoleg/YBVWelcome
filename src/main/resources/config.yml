@@ -24,3 +24,8 @@ messages:
   quit:
     enabled: true
     disable-vanilla: true
+
+# Кулдаун в секундах для команд /welcome set и /welcome clear.
+# Установите 0, чтобы отключить.
+commands:
+  cooldown: 1
