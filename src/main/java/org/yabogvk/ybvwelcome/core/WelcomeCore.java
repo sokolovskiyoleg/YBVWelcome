@@ -89,14 +89,35 @@ public class WelcomeCore {
 
     public void handlePlayerFirstJoin(Player target) {
         String rawMessage = messageManager.getFirstJoin();
-        if (rawMessage == null || rawMessage.equalsIgnoreCase("none")) return;
+        if (rawMessage != null && !rawMessage.equalsIgnoreCase("none")) {
+            String processed = rawMessage.replace("{player}", target.getName());
+            if (plugin.isPlaceholderAPIEnabled()) {
+                processed = PlaceholderAPI.setPlaceholders(target, processed);
+            }
+            Bukkit.broadcast(MessageUtils.parse(processed));
+        }
 
-        Component mainComponent = MessageUtils.parse(rawMessage, target);
+        String rawPrompt = messageManager.getFirstJoinButtonPrompt();
+        if (rawPrompt == null || rawPrompt.equalsIgnoreCase("none")) return;
+
+        String processedPrompt = rawPrompt.replace("{player}", target.getName());
+        if (plugin.isPlaceholderAPIEnabled()) {
+            processedPrompt = PlaceholderAPI.setPlaceholders(target, processedPrompt);
+        }
+        Component promptComponent = MessageUtils.parse(processedPrompt);
 
         final Set<UUID> clickedPlayers = ConcurrentHashMap.newKeySet();
 
-        Component button = MessageUtils.parse(messageManager.getWelcomeButtonText(), target)
-                .hoverEvent(HoverEvent.showText(MessageUtils.parse(messageManager.getWelcomeButtonHover(), target)))
+        String buttonText = messageManager.getWelcomeButtonText();
+        String hoverText = messageManager.getWelcomeButtonHover();
+
+        if (plugin.isPlaceholderAPIEnabled()) {
+            buttonText = PlaceholderAPI.setPlaceholders(target, buttonText);
+            hoverText = PlaceholderAPI.setPlaceholders(target, hoverText);
+        }
+
+        Component button = MessageUtils.parse(buttonText)
+                .hoverEvent(HoverEvent.showText(MessageUtils.parse(hoverText)))
                 .clickEvent(ClickEvent.callback(audience -> {
                     if (audience instanceof Player clicker) {
                         if (clicker.getUniqueId().equals(target.getUniqueId())) {
@@ -108,7 +129,7 @@ public class WelcomeCore {
                     }
                 }, builder -> builder.uses(-1).lifetime(Duration.ofMinutes(10))));
 
-        Bukkit.broadcast(mainComponent.append(button));
+        Bukkit.broadcast(promptComponent.append(Component.space()).append(button));
     }
 
     private void sendRandomWelcome(Player clicker, Player target) {
@@ -116,9 +137,13 @@ public class WelcomeCore {
         if (variants.isEmpty()) return;
 
         String randomMsg = variants.get(new java.util.Random().nextInt(variants.size()));
-        String finalMsg = randomMsg.replace("{player}", target.getName());
+        String processedMsg = randomMsg.replace("{player}", target.getName());
 
-        clicker.chat(finalMsg);
+        if (plugin.isPlaceholderAPIEnabled()) {
+            processedMsg = PlaceholderAPI.setPlaceholders(clicker, processedMsg);
+        }
+
+        clicker.chat(processedMsg);
     }
 
     public void setPlayerWelcomeMessage(Player player, String message) {
@@ -169,7 +194,12 @@ public class WelcomeCore {
     private void broadcast(String raw, Player player) {
         if (raw == null || raw.equalsIgnoreCase("none")) return;
 
-        Component component = MessageUtils.parse(raw, player);
+        String processed = raw.replace("{player}", player.getName());
+        if (plugin.isPlaceholderAPIEnabled()) {
+            processed = PlaceholderAPI.setPlaceholders(player, processed);
+        }
+
+        Component component = MessageUtils.parse(processed);
         Bukkit.broadcast(component);
     }
 

@@ -134,5 +134,6 @@ public class MessageManager {
     public String getFormatQuitDefault() { return get("formats.quit.default", "&8[&c-&8] &f{player} {message}"); }
 
     public String getFirstJoin() { return get("formats.first_join", "&f{player} &fприсоединился впервые!"); }
+    public String getFirstJoinButtonPrompt() { return get("formats.first_join_button_prompt", "&7Нажми, чтобы поприветствовать ->"); }
 
 }
