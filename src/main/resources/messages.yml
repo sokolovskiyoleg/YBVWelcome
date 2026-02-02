@@ -12,6 +12,7 @@
 # --- [ ШАБЛОНЫ ФОРМАТОВ ] ---
 formats:
   first_join: "&8[&a&l+&8] &b&lNEW &f{player} &fвпервые на сервере!"
+  first_join_button_prompt: "&7Нажми, чтобы поприветствовать ->"
   join:
     custom: "&8[&a&l+&8] &f{player} &f{message}" # (/welcome set join ...)
     default: "&8[&a&l+&8] &f{player} &fприсоединился"
