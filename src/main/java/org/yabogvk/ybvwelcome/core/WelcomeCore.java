@@ -1,5 +1,6 @@
 package org.yabogvk.ybvwelcome.core;
 
+import me.clip.placeholderapi.PlaceholderAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -90,34 +91,21 @@ public class WelcomeCore {
     public void handlePlayerFirstJoin(Player target) {
         String rawMessage = messageManager.getFirstJoin();
         if (rawMessage != null && !rawMessage.equalsIgnoreCase("none")) {
-            String processed = rawMessage.replace("{player}", target.getName());
-            if (plugin.isPlaceholderAPIEnabled()) {
-                processed = PlaceholderAPI.setPlaceholders(target, processed);
-            }
-            Bukkit.broadcast(MessageUtils.parse(processed));
+            Bukkit.broadcast(MessageUtils.parse(rawMessage, target));
         }
 
         String rawPrompt = messageManager.getFirstJoinButtonPrompt();
         if (rawPrompt == null || rawPrompt.equalsIgnoreCase("none")) return;
 
-        String processedPrompt = rawPrompt.replace("{player}", target.getName());
-        if (plugin.isPlaceholderAPIEnabled()) {
-            processedPrompt = PlaceholderAPI.setPlaceholders(target, processedPrompt);
-        }
-        Component promptComponent = MessageUtils.parse(processedPrompt);
+        Component promptComponent = MessageUtils.parse(rawPrompt, target);
 
         final Set<UUID> clickedPlayers = ConcurrentHashMap.newKeySet();
 
         String buttonText = messageManager.getWelcomeButtonText();
         String hoverText = messageManager.getWelcomeButtonHover();
 
-        if (plugin.isPlaceholderAPIEnabled()) {
-            buttonText = PlaceholderAPI.setPlaceholders(target, buttonText);
-            hoverText = PlaceholderAPI.setPlaceholders(target, hoverText);
-        }
-
-        Component button = MessageUtils.parse(buttonText)
-                .hoverEvent(HoverEvent.showText(MessageUtils.parse(hoverText)))
+        Component button = MessageUtils.parse(buttonText, target)
+                .hoverEvent(HoverEvent.showText(MessageUtils.parse(hoverText, target)))
                 .clickEvent(ClickEvent.callback(audience -> {
                     if (audience instanceof Player clicker) {
                         if (clicker.getUniqueId().equals(target.getUniqueId())) {
@@ -194,12 +182,7 @@ public class WelcomeCore {
     private void broadcast(String raw, Player player) {
         if (raw == null || raw.equalsIgnoreCase("none")) return;
 
-        String processed = raw.replace("{player}", player.getName());
-        if (plugin.isPlaceholderAPIEnabled()) {
-            processed = PlaceholderAPI.setPlaceholders(player, processed);
-        }
-
-        Component component = MessageUtils.parse(processed);
+        Component component = MessageUtils.parse(raw, player);
         Bukkit.broadcast(component);
     }
 
