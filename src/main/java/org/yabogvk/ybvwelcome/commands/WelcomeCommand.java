@@ -61,9 +61,12 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
             if (subCommandName.equals("set") || subCommandName.equals("clear")) {
                 int cooldownTime = plugin.getSettings().commandCooldown;
                 if (cooldownTime > 0) {
-                    long timeLeft = (cooldowns.getOrDefault(player.getUniqueId(), 0L) + (cooldownTime * 1000L) - System.currentTimeMillis()) / 1000L;
-                    if (timeLeft > 0) {
-                        MessageUtils.sendMessage(player, messageManager.getCooldown().replace("{time}", String.valueOf(timeLeft)));
+                    long lastUsed = cooldowns.getOrDefault(player.getUniqueId(), 0L);
+                    long timeRemainingMillis = (lastUsed + (cooldownTime * 1000L)) - System.currentTimeMillis();
+
+                    if (timeRemainingMillis > 0) {
+                        long timeLeftSeconds = (long) Math.ceil(timeRemainingMillis / 1000.0);
+                        MessageUtils.sendMessage(player, messageManager.getCooldown().replace("{time}", String.valueOf(timeLeftSeconds)));
                         return true;
                     }
                     cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
