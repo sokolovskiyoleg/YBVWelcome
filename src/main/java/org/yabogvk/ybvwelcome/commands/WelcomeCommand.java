@@ -5,6 +5,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.commands.sub.ClearCommand;
@@ -16,8 +17,11 @@ import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class WelcomeCommand implements CommandExecutor, TabCompleter {
@@ -25,6 +29,7 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
     private final YBVWelcome plugin = YBVWelcome.getInstance();
     private final MessageManager messageManager = plugin.getMessageManager();
     private final List<SubCommand> subCommands = new ArrayList<>();
+    private final Map<UUID, Long> cooldowns = new HashMap<>();
 
     public WelcomeCommand() {
         PluginCommand pluginCommand = plugin.getCommand("ybvwelcome");
@@ -51,6 +56,21 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
         }
 
         String subCommandName = args[0].toLowerCase();
+
+        if (sender instanceof Player player) {
+            if (subCommandName.equals("set") || subCommandName.equals("clear")) {
+                int cooldownTime = plugin.getSettings().commandCooldown;
+                if (cooldownTime > 0) {
+                    long timeLeft = (cooldowns.getOrDefault(player.getUniqueId(), 0L) + (cooldownTime * 1000L) - System.currentTimeMillis()) / 1000L;
+                    if (timeLeft > 0) {
+                        MessageUtils.sendMessage(player, messageManager.getCooldown().replace("{time}", String.valueOf(timeLeft)));
+                        return true;
+                    }
+                    cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+                }
+            }
+        }
+
         Optional<SubCommand> subCmd = subCommands.stream()
                 .filter(sc -> sc.getName().equalsIgnoreCase(subCommandName))
                 .findFirst();
@@ -90,7 +110,6 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
                 }
             }
         }
-
         return null;
     }
 }

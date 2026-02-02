@@ -18,6 +18,8 @@ public class Settings {
     public boolean quitDisableVanilla;
     public boolean quitEnabled;
 
+    public int commandCooldown;
+
 
     public Settings(YBVWelcome plugin) {
         this.plugin = plugin;
@@ -37,5 +39,7 @@ public class Settings {
         firstJoinEnabled = config.getBoolean("messages.join.firstjoin-enabled", true);
         quitDisableVanilla = config.getBoolean("messages.quit.disable-vanilla", true);
         quitEnabled = config.getBoolean("messages.quit.enabled", true);
+
+        commandCooldown = config.getInt("commands.cooldown", 5);
     }
 }
