@@ -15,7 +15,7 @@ public class DatabaseProvider {
         String type = plugin.getSettings().databaseType;
 
         if (type.equalsIgnoreCase("MYSQL")) {
-            ConfigurationSection config = plugin.getConfig().getConfigurationSection("database.mysql");
+            ConfigurationSection config = plugin.getConfigManager().getMainConfig().getConfigurationSection("database.mysql");
             database = new MySQLDatabase(config);
         } else {
             database = new SQLiteDatabase(new File(plugin.getDataFolder(), "database.db"));
