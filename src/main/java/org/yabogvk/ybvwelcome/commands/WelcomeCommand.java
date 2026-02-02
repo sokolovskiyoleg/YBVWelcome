@@ -1,135 +1,118 @@
 package org.yabogvk.ybvwelcome.commands;
 
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 import org.yabogvk.ybvwelcome.YBVWelcome;
-import org.yabogvk.ybvwelcome.core.WelcomeCore;
+import org.yabogvk.ybvwelcome.commands.sub.ClearCommand;
+import org.yabogvk.ybvwelcome.commands.sub.ReloadCommand;
+import org.yabogvk.ybvwelcome.commands.sub.SetCommand;
+import org.yabogvk.ybvwelcome.commands.sub.SubCommand;
 import org.yabogvk.ybvwelcome.managers.MessageManager;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class WelcomeCommand extends AbstractCommand {
+public class WelcomeCommand implements CommandExecutor, TabCompleter {
 
-    private final YBVWelcome instance = YBVWelcome.getInstance();
-    private final MessageManager messageManager = instance.getMessageManager();
-    private final WelcomeCore core = instance.getCore();
+    private final YBVWelcome plugin = YBVWelcome.getInstance();
+    private final MessageManager messageManager = plugin.getMessageManager();
+    private final List<SubCommand> subCommands = new ArrayList<>();
+    private final Map<UUID, Long> cooldowns = new HashMap<>();
 
     public WelcomeCommand() {
-        super("ybvwelcome");
-        registerAliases("welcome");
+        PluginCommand pluginCommand = plugin.getCommand("ybvwelcome");
+        if (pluginCommand != null) {
+            pluginCommand.setExecutor(this);
+            pluginCommand.setTabCompleter(this);
+        }
+
+        subCommands.add(new ReloadCommand());
+        subCommands.add(new SetCommand());
+        subCommands.add(new ClearCommand());
     }
 
-
-    private boolean noPerm(CommandSender sender, String perm) {
-        if (!sender.hasPermission(perm)) {
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (!sender.hasPermission("ybvwelcome.use")) {
             MessageUtils.sendMessage(sender, messageManager.getNoPermissions());
             return true;
         }
-        return false;
-    }
-
-    @Override
-    public void execute(CommandSender sender, String label, String[] args) {
-        if (noPerm(sender, "ybvwelcome.use")) return;
 
         if (args.length == 0) {
             MessageUtils.sendMessage(sender, messageManager.getUsage());
-            return;
+            return true;
         }
 
-        String subCommand = args[0].toLowerCase();
-        switch (subCommand) {
-            case "reload" -> handleReload(sender);
-            case "set"    -> handleSet(sender, args);
-            case "clear"  -> handleClear(sender, args);
-            default       -> MessageUtils.sendMessage(sender, messageManager.getUsage());
-        }
-    }
+        String subCommandName = args[0].toLowerCase();
 
-    private void handleReload(CommandSender sender) {
-        if (noPerm(sender, "ybvwelcome.admin")) return;
+        if (sender instanceof Player player) {
+            if (subCommandName.equals("set") || subCommandName.equals("clear")) {
+                int cooldownTime = plugin.getSettings().commandCooldown;
+                if (cooldownTime > 0) {
+                    long lastUsed = cooldowns.getOrDefault(player.getUniqueId(), 0L);
+                    long timeRemainingMillis = (lastUsed + (cooldownTime * 1000L)) - System.currentTimeMillis();
 
-        instance.reload();
-        MessageUtils.sendMessage(sender, messageManager.getReloadSuccess());
-    }
-
-    private void handleSet(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) {
-            MessageUtils.sendMessage(sender, messageManager.getOnlyForPlayers());
-            return;
-        }
-        if (noPerm(player, "ybvwelcome.set")) return;
-
-        if (args.length < 3) {
-            MessageUtils.sendMessage(sender, messageManager.getUsageSet());
-            return;
+                    if (timeRemainingMillis > 0) {
+                        long timeLeftSeconds = (long) Math.ceil(timeRemainingMillis / 1000.0);
+                        MessageUtils.sendMessage(player, messageManager.getCooldown().replace("{time}", String.valueOf(timeLeftSeconds)));
+                        return true;
+                    }
+                    cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+                }
+            }
         }
 
-        String type = args[1].toLowerCase();
-        String message = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+        Optional<SubCommand> subCmd = subCommands.stream()
+                .filter(sc -> sc.getName().equalsIgnoreCase(subCommandName))
+                .findFirst();
 
-        if (type.equals("join")) {
-            core.setPlayerWelcomeMessage(player, message);
-        } else if (type.equals("quit")) {
-            core.setPlayerQuitMessage(player, message);
+        if (subCmd.isPresent()) {
+            String[] subArgs = Arrays.copyOfRange(args, 1, args.length);
+            subCmd.get().execute(sender, subArgs);
         } else {
-            MessageUtils.sendMessage(player, messageManager.getUsageSet());
+            MessageUtils.sendMessage(sender, messageManager.getUsage());
         }
-    }
-
-    private void handleClear(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player player)) {
-            MessageUtils.sendMessage(sender, messageManager.getOnlyForPlayers());
-            return;
-        }
-        if (noPerm(player, "ybvwelcome.set")) return;
-
-        if (args.length < 2) {
-            MessageUtils.sendMessage(sender, messageManager.getUsageClear());
-            return;
-        }
-
-        String type = args[1].toLowerCase();
-        if (type.equals("join")) {
-            core.clearPlayerJoinMessage(player);
-        } else if (type.equals("quit")) {
-            core.clearPlayerQuitMessage(player);
-        } else {
-            MessageUtils.sendMessage(player, messageManager.getUsageClear());
-        }
+        return true;
     }
 
     @Override
-    public List<String> complete(CommandSender sender, String... args) {
-        List<String> completions = new ArrayList<>();
-
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
-            if (sender.hasPermission("ybvwelcome.admin")) completions.add("reload");
-            if (sender.hasPermission("ybvwelcome.set")) {
-                completions.add("set");
-                completions.add("clear");
-            }
-            return filter(completions, args[0]);
+            return subCommands.stream()
+                    .filter(sc -> sender.hasPermission(sc.getPermission()))
+                    .map(SubCommand::getName)
+                    .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .collect(Collectors.toList());
         }
 
-        if (args.length == 2 && sender.hasPermission("ybvwelcome.set")) {
-            if (args[0].equalsIgnoreCase("set") || args[0].equalsIgnoreCase("clear")) {
-                completions.add("join");
-                completions.add("quit");
+        if (args.length > 1) {
+            String subCommandName = args[0].toLowerCase();
+            Optional<SubCommand> subCmd = subCommands.stream()
+                    .filter(sc -> sc.getName().equalsIgnoreCase(subCommandName))
+                    .findFirst();
+
+            if (subCmd.isPresent() && sender.hasPermission(subCmd.get().getPermission())) {
+                String[] subArgs = Arrays.copyOfRange(args, 1, args.length);
+                List<String> completions = subCmd.get().complete(sender, subArgs);
+                if (completions != null) {
+                    return completions.stream()
+                            .filter(s -> s.toLowerCase().startsWith(args[args.length - 1].toLowerCase()))
+                            .collect(Collectors.toList());
+                }
             }
         }
-
-        return filter(completions, args[args.length - 1]);
-    }
-
-    private List<String> filter(List<String> list, String input) {
-        String lastArg = input.toLowerCase();
-        return list.stream()
-                .filter(s -> s.startsWith(lastArg))
-                .collect(Collectors.toList());
+        return null;
     }
 }

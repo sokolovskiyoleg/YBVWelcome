@@ -1,12 +1,12 @@
-#################################################################
+# ============================================================= #
 # Permissions (commands)                                        #
-# ybvwelcome.use - /ybvwelcome                                  #
-# ybvwelcome.reload - /ybvwelcome reload                        #
-# ybvwelcome.setjoin - /ybvwelcome set join (message)           #
-# ybvwelcome.setquit - /ybvwelcome set quit (message)           #
-# ybvwelcome.clearjoin - /ybvwelcome clear join (message)       #
-# ybvwelcome.clearquit - /ybvwelcome clear quit (message)       #
-#################################################################
+#  ybvwelcome.use - /ybvwelcome                                 #
+#  ybvwelcome.reload - /ybvwelcome reload                       #
+#  ybvwelcome.setjoin - /ybvwelcome set join (message)          #
+#  ybvwelcome.setquit - /ybvwelcome set quit (message)          #
+#  ybvwelcome.clearjoin - /ybvwelcome clear join (message)      #
+#  ybvwelcome.clearquit - /ybvwelcome clear quit (message)      #
+# ============================================================= #
 database:
   type: SQLITE # SQLITE, MYSQL
   mysql:
@@ -24,3 +24,8 @@ messages:
   quit:
     enabled: true
     disable-vanilla: true
+
+# Кулдаун в секундах для команд /welcome set и /welcome clear.
+# Установите 0, чтобы отключить.
+commands:
+  cooldown: 1

@@ -1,5 +1,5 @@
 name: YBVWelcome
-version: '1.1'
+version: '${project.version}'
 main: org.yabogvk.ybvwelcome.YBVWelcome
 api-version: '1.21'
 author: yabogvk
@@ -10,11 +10,12 @@ softdepend: ["PlaceholderAPI"]
 commands:
   ybvwelcome:
     usage: /<command> [set|clear|reload]
-    alias: welcome
+    aliases: [welcome]
+    permission: ybvwelcome.use
 permissions:
   ybvwelcome.use:
     description: Доступ к базовой команде
-    default: true
+    default: op
   ybvwelcome.set:
     description: Возможность устанавливать свои сообщения входа/выхода
     default: op

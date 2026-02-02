@@ -24,7 +24,7 @@ public class MessageManager {
     }
 
     public void reload() {
-        FileConfiguration config = plugin.getMessagesConfig();
+        FileConfiguration config = plugin.getConfigManager().getMessagesConfig();
         cachedMessages.clear();
         cachedLists.clear();
         cachedGroupMessages.clear();
@@ -118,6 +118,8 @@ public class MessageManager {
     }
 
     public String getToManySymbols() { return get("commands.to-many-symbols", "&8[&c&l!&8] &7Слишком много символов!"); }
+
+    public String getCooldown() { return get("commands.cooldown", "&8[&c&l!&8] &7Подождите &c{time} &7секунд перед повторным использованием!"); }
 
 
     public String getUsage() { return get("commands.usage", "&6Использование: &e/ybvwelcome &7[set|clear|reload]"); }
