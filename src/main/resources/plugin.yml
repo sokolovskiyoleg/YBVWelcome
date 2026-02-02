@@ -1,5 +1,5 @@
 name: YBVWelcome
-version: '1.1'
+version: '${project.version}'
 main: org.yabogvk.ybvwelcome.YBVWelcome
 api-version: '1.21'
 author: yabogvk
