@@ -29,6 +29,6 @@ public class PlayerQuitListener implements Listener {
             return;
         }
 
-        plugin.getCore().handlePlayerQuit(player);
+        plugin.getWelcomeService().handleQuit(player);
     }
 }

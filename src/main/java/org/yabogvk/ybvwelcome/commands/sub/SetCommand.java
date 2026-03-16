@@ -2,14 +2,12 @@ package org.yabogvk.ybvwelcome.commands.sub;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.yabogvk.ybvwelcome.core.WelcomeCore;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
-import java.util.Arrays;
 import java.util.List;
-public class SetCommand extends SubCommand {
+import java.util.Locale;
 
-    private final WelcomeCore core = plugin.getCore();
+public class SetCommand extends SubCommand {
 
     @Override
     public String getName() {
@@ -32,13 +30,13 @@ public class SetCommand extends SubCommand {
             return;
         }
 
-        String type = args[0].toLowerCase();
-        String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        String type = args[0].toLowerCase(Locale.ROOT);
+        String message = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
 
         if (type.equals("join")) {
-            core.setPlayerWelcomeMessage(player, message);
+            welcomeService.setPlayerWelcomeMessage(player, message);
         } else if (type.equals("quit")) {
-            core.setPlayerQuitMessage(player, message);
+            welcomeService.setPlayerQuitMessage(player, message);
         } else {
             MessageUtils.sendMessage(player, messageManager.getUsageSet());
         }

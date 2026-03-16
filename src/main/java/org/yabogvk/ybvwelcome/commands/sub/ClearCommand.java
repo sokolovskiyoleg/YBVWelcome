@@ -2,14 +2,12 @@ package org.yabogvk.ybvwelcome.commands.sub;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.yabogvk.ybvwelcome.core.WelcomeCore;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
 import java.util.List;
+import java.util.Locale;
 
 public class ClearCommand extends SubCommand {
-
-    private final WelcomeCore core = plugin.getCore();
 
     @Override
     public String getName() {
@@ -32,11 +30,11 @@ public class ClearCommand extends SubCommand {
             return;
         }
 
-        String type = args[0].toLowerCase();
+        String type = args[0].toLowerCase(Locale.ROOT);
         if (type.equals("join")) {
-            core.clearPlayerJoinMessage(player);
+            welcomeService.clearPlayerJoinMessage(player);
         } else if (type.equals("quit")) {
-            core.clearPlayerQuitMessage(player);
+            welcomeService.clearPlayerQuitMessage(player);
         } else {
             MessageUtils.sendMessage(player, messageManager.getUsageClear());
         }

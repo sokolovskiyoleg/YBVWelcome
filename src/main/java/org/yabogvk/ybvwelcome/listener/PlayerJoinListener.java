@@ -31,6 +31,6 @@ public class PlayerJoinListener implements Listener {
 
         boolean isFirst = !player.hasPlayedBefore() && settings.firstJoinEnabled;
 
-        plugin.getCore().loadAndJoin(player, isFirst);
+        plugin.getWelcomeService().handleJoin(player, isFirst);
     }
 }

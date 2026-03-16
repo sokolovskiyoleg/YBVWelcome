@@ -19,7 +19,7 @@ public class ReloadCommand extends SubCommand {
     public void execute(CommandSender sender, String[] args) {
         if (noPerm(sender)) return;
 
-        plugin.reload();
+        plugin.reloadPlugin();
         MessageUtils.sendMessage(sender, messageManager.getReloadSuccess());
     }
 }

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,7 +56,7 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        String subCommandName = args[0].toLowerCase();
+        String subCommandName = args[0].toLowerCase(Locale.ROOT);
 
         if (sender instanceof Player player) {
             if (subCommandName.equals("set") || subCommandName.equals("clear")) {
@@ -93,12 +94,12 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
             return subCommands.stream()
                     .filter(sc -> sender.hasPermission(sc.getPermission()))
                     .map(SubCommand::getName)
-                    .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT)))
                     .collect(Collectors.toList());
         }
 
         if (args.length > 1) {
-            String subCommandName = args[0].toLowerCase();
+            String subCommandName = args[0].toLowerCase(Locale.ROOT);
             Optional<SubCommand> subCmd = subCommands.stream()
                     .filter(sc -> sc.getName().equalsIgnoreCase(subCommandName))
                     .findFirst();
@@ -108,7 +109,7 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
                 List<String> completions = subCmd.get().complete(sender, subArgs);
                 if (completions != null) {
                     return completions.stream()
-                            .filter(s -> s.toLowerCase().startsWith(args[args.length - 1].toLowerCase()))
+                            .filter(s -> s.toLowerCase(Locale.ROOT).startsWith(args[args.length - 1].toLowerCase(Locale.ROOT)))
                             .collect(Collectors.toList());
                 }
             }
