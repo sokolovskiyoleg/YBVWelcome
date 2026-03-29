@@ -4,7 +4,7 @@
 #  ybvwelcome.admin - /ybvwelcome reload                        #
 #  ybvwelcome.set - /ybvwelcome set join|quit <message>         #
 #  ybvwelcome.clear - /ybvwelcome clear join|quit               #
-#  ybvwelcome.set also still works for clear (backward compat)  #
+#  ybvwelcome.set Пока-что работает и для /ybvwelcome clear     #
 # ============================================================= #
 serializer: LEGACY # LEGACY, MINIMESSAGE
 database:
