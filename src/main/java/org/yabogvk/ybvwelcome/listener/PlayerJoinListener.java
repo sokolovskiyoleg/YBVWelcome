@@ -21,16 +21,16 @@ public class PlayerJoinListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        if (settings.joinDisableVanilla) {
+        if (settings.isJoinDisableVanilla()) {
             event.setJoinMessage(null);
         }
 
-        if (!settings.joinEnabled) {
+        if (!settings.isJoinEnabled()) {
             return;
         }
 
-        boolean isFirst = !player.hasPlayedBefore() && settings.firstJoinEnabled;
+        boolean isFirst = !player.hasPlayedBefore() && settings.isFirstJoinEnabled();
 
-        plugin.getCore().loadAndJoin(player, isFirst);
+        plugin.getWelcomeService().handleJoin(player, isFirst);
     }
 }

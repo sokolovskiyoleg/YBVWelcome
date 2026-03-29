@@ -21,14 +21,14 @@ public class PlayerQuitListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
 
-        if (settings.quitDisableVanilla) {
+        if (settings.isQuitDisableVanilla()) {
             event.setQuitMessage(null);
         }
 
-        if (!settings.quitEnabled) {
+        if (!settings.isQuitEnabled()) {
             return;
         }
 
-        plugin.getCore().handlePlayerQuit(player);
+        plugin.getWelcomeService().handleQuit(player);
     }
 }

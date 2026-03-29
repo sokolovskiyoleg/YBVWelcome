@@ -1,5 +1,8 @@
 package org.yabogvk.ybvwelcome.utils;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.regex.Pattern;
 
 /**
@@ -24,6 +27,7 @@ public class SecurityUtils {
      * @param input Raw input string
      * @return Sanitized player name or null if invalid
      */
+    @Nullable
     public static String sanitizePlayerName(String input) {
         if (input == null || input.trim().isEmpty()) {
             return null;
@@ -34,6 +38,16 @@ public class SecurityUtils {
         // Check if it matches valid player name pattern
         if (!VALID_PLAYER_NAME.matcher(sanitized).matches()) {
             return null;
+        }
+
+        return sanitized;
+    }
+
+    @NotNull
+    public static String requireValidPlayerName(String input) {
+        String sanitized = sanitizePlayerName(input);
+        if (sanitized == null) {
+            throw new IllegalArgumentException("Invalid player name: " + input);
         }
 
         return sanitized;
@@ -162,6 +176,7 @@ public class SecurityUtils {
      * @param input Raw input string
      * @return Sanitized message content
      */
+    @NotNull
     public static String sanitizeMessageContent(String input) {
         if (input == null) {
             return "";

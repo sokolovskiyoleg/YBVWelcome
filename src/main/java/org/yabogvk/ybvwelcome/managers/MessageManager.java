@@ -3,19 +3,35 @@ package org.yabogvk.ybvwelcome.managers;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 import org.yabogvk.ybvwelcome.YBVWelcome;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class MessageManager {
+    private record GroupMessageRule(@Nullable String permission, @Nullable String join, @Nullable String quit) {
+        @Nullable
+        private String getMessage(String type) {
+            if ("join".equals(type)) {
+                return join;
+            }
+
+            if ("quit".equals(type)) {
+                return quit;
+            }
+
+            return null;
+        }
+    }
 
     private final YBVWelcome plugin;
     private final Map<String, String> cachedMessages = new HashMap<>();
     private final Map<String, List<String>> cachedLists = new HashMap<>();
-    private final Map<String, Map<String, String>> cachedGroupMessages = new HashMap<>();
+    private final List<GroupMessageRule> cachedGroupMessages = new ArrayList<>();
     private boolean groupMessagesEnabled;
 
     public MessageManager(YBVWelcome plugin) {
@@ -48,11 +64,11 @@ public class MessageManager {
                 for (String groupName : groups.getKeys(false)) {
                     ConfigurationSection groupSection = groups.getConfigurationSection(groupName);
                     if (groupSection != null) {
-                        Map<String, String> groupData = new HashMap<>();
-                        groupData.put("permission", groupSection.getString("permission"));
-                        groupData.put("join", groupSection.getString("join"));
-                        groupData.put("quit", groupSection.getString("quit"));
-                        cachedGroupMessages.put(groupName, groupData);
+                        cachedGroupMessages.add(new GroupMessageRule(
+                                groupSection.getString("permission"),
+                                groupSection.getString("join"),
+                                groupSection.getString("quit")
+                        ));
                     }
                 }
             }
@@ -67,15 +83,17 @@ public class MessageManager {
         return cachedLists.getOrDefault(path, Collections.emptyList());
     }
 
+    @Nullable
     public String getGroupMessage(Player player, String type) {
-        if (!groupMessagesEnabled) return null;
+        if (!groupMessagesEnabled) {
+            return null;
+        }
 
-        for (Map.Entry<String, Map<String, String>> entry : cachedGroupMessages.entrySet()) {
-            Map<String, String> groupData = entry.getValue();
-            String perm = groupData.get("permission");
+        for (GroupMessageRule groupRule : cachedGroupMessages) {
+            String perm = groupRule.permission();
 
             if (perm == null || perm.isEmpty() || player.hasPermission(perm)) {
-                return groupData.get(type);
+                return groupRule.getMessage(type);
             }
         }
         return null;
@@ -93,9 +111,9 @@ public class MessageManager {
         return get("welcome-button.hover", "Нажми сюда!");
     }
 
-    public String getJoinDefault() { return get("join.default", "&fприсоединился"); }
+    public String getJoinDefault() { return get("defaults.join", "&fприсоединился"); }
 
-    public String getQuitDefault() { return get("quit.default", "&fвышел"); }
+    public String getQuitDefault() { return get("defaults.quit", "&fвышел"); }
 
     public String getNoPermissions() { return get("commands.no-permissions", "&8[&c&l!&8] &7У вас &cнет прав!"); }
 

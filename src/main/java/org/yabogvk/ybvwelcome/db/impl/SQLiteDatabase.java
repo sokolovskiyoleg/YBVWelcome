@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.db.Database;
 import org.yabogvk.ybvwelcome.model.PlayerMessages;
 import org.yabogvk.ybvwelcome.utils.SecurityUtils;
@@ -19,8 +18,8 @@ public class SQLiteDatabase implements Database {
     private final HikariDataSource dataSource;
     private final Logger logger;
 
-    public SQLiteDatabase(File file) throws SQLException {
-        this.logger = YBVWelcome.getInstance().getLogger();
+    public SQLiteDatabase(Logger logger, File file) throws SQLException {
+        this.logger = logger;
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:sqlite:" + file.getAbsolutePath());
         config.setDriverClassName("org.sqlite.JDBC");
@@ -113,7 +112,7 @@ public class SQLiteDatabase implements Database {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, uuid.toString());
-            stmt.setString(2, SecurityUtils.sanitizePlayerName(playerName));
+            stmt.setString(2, SecurityUtils.requireValidPlayerName(playerName));
             stmt.setString(3, SecurityUtils.sanitizeMessageContent(message));
 
             return stmt.executeUpdate() > 0;

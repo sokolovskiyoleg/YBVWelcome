@@ -19,6 +19,9 @@ permissions:
   ybvwelcome.set:
     description: Возможность устанавливать свои сообщения входа/выхода
     default: op
+  ybvwelcome.clear:
+    description: Возможность очищать свои сообщения входа/выхода; старый ybvwelcome.set тоже поддерживается
+    default: op
   ybvwelcome.admin:
-    description: Доступ к перезагрузке плагина
+    description: Доступ к перезагрузке плагина через /ybvwelcome reload
     default: op
