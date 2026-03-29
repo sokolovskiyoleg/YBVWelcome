@@ -12,6 +12,7 @@ import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.db.Database;
 import org.yabogvk.ybvwelcome.managers.MessageManager;
 import org.yabogvk.ybvwelcome.model.PlayerMessages;
+import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
 import java.time.Duration;
 import java.util.List;
@@ -21,42 +22,42 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MessageService {
     private final YBVWelcome plugin;
     private final MessageManager messageManager;
-    private final MessageRenderer renderer;
+    private final MessageUtils messageUtils;
 
-    public MessageService(YBVWelcome plugin, MessageManager messageManager, MessageRenderer renderer) {
+    public MessageService(YBVWelcome plugin, MessageManager messageManager, MessageUtils messageUtils) {
         this.plugin = plugin;
         this.messageManager = messageManager;
-        this.renderer = renderer;
+        this.messageUtils = messageUtils;
     }
 
     public void reload() {
     }
 
     public void send(CommandSender sender, String message) {
-        renderer.send(sender, message);
+        messageUtils.sendMessage(sender, message);
     }
 
     public void broadcastJoin(Player player, @Nullable PlayerMessages messages) {
-        renderer.broadcast(resolveMessage(player, messages, Database.MessageType.WELCOME), player);
+        broadcast(resolveMessage(player, messages, Database.MessageType.WELCOME), player);
     }
 
     public void broadcastQuit(Player player, @Nullable PlayerMessages messages) {
-        renderer.broadcast(resolveMessage(player, messages, Database.MessageType.QUIT), player);
+        broadcast(resolveMessage(player, messages, Database.MessageType.QUIT), player);
     }
 
     public void broadcastFirstJoin(Player target) {
-        renderer.broadcast(messageManager.getFirstJoin(), target);
+        broadcast(messageManager.getFirstJoin(), target);
 
         String rawPrompt = messageManager.getFirstJoinButtonPrompt();
         if (rawPrompt == null || rawPrompt.equalsIgnoreCase("none")) {
             return;
         }
 
-        Component promptComponent = renderer.render(rawPrompt, target);
+        Component promptComponent = messageUtils.parse(rawPrompt, target);
         Set<java.util.UUID> clickedPlayers = ConcurrentHashMap.newKeySet();
 
-        Component button = renderer.render(messageManager.getWelcomeButtonText(), target)
-                .hoverEvent(HoverEvent.showText(renderer.render(messageManager.getWelcomeButtonHover(), target)))
+        Component button = messageUtils.parse(messageManager.getWelcomeButtonText(), target)
+                .hoverEvent(HoverEvent.showText(messageUtils.parse(messageManager.getWelcomeButtonHover(), target)))
                 .clickEvent(ClickEvent.callback(audience -> {
                     if (!(audience instanceof Player clicker)) {
                         return;
@@ -70,6 +71,14 @@ public class MessageService {
                 }, builder -> builder.uses(-1).lifetime(Duration.ofMinutes(10))));
 
         Bukkit.broadcast(promptComponent.append(Component.space()).append(button));
+    }
+
+    private void broadcast(String message, @Nullable Player player) {
+        if (message == null || message.equalsIgnoreCase("none")) {
+            return;
+        }
+
+        Bukkit.broadcast(messageUtils.parse(message, player));
     }
 
     public String resolveMessage(Player player, @Nullable PlayerMessages messages, Database.MessageType type) {

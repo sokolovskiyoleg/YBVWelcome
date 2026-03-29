@@ -1,12 +1,12 @@
 # ============================================================= #
 # Permissions (commands)                                        #
 #  ybvwelcome.use - /ybvwelcome                                 #
-#  ybvwelcome.reload - /ybvwelcome reload                       #
-#  ybvwelcome.setjoin - /ybvwelcome set join (message)          #
-#  ybvwelcome.setquit - /ybvwelcome set quit (message)          #
-#  ybvwelcome.clearjoin - /ybvwelcome clear join (message)      #
-#  ybvwelcome.clearquit - /ybvwelcome clear quit (message)      #
+#  ybvwelcome.admin - /ybvwelcome reload                        #
+#  ybvwelcome.set - /ybvwelcome set join|quit <message>         #
+#  ybvwelcome.clear - /ybvwelcome clear join|quit               #
+#  ybvwelcome.set also still works for clear (backward compat)  #
 # ============================================================= #
+serializer: LEGACY # LEGACY, MINIMESSAGE
 database:
   type: SQLITE # SQLITE, MYSQL
   mysql:

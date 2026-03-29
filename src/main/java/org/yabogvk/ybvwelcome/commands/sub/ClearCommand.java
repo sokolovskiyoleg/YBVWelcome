@@ -2,12 +2,20 @@ package org.yabogvk.ybvwelcome.commands.sub;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.yabogvk.ybvwelcome.YBVWelcome;
+import org.yabogvk.ybvwelcome.managers.MessageManager;
+import org.yabogvk.ybvwelcome.service.WelcomeService;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
 import java.util.List;
 import java.util.Locale;
 
 public class ClearCommand extends SubCommand {
+
+    public ClearCommand(YBVWelcome plugin, MessageManager messageManager, WelcomeService welcomeService,
+                        MessageUtils messageUtils) {
+        super(plugin, messageManager, welcomeService, messageUtils);
+    }
 
     @Override
     public String getName() {
@@ -16,7 +24,12 @@ public class ClearCommand extends SubCommand {
 
     @Override
     public String getPermission() {
-        return "ybvwelcome.set";
+        return "ybvwelcome.clear";
+    }
+
+    @Override
+    public boolean hasAccess(CommandSender sender) {
+        return sender.hasPermission("ybvwelcome.clear") || sender.hasPermission("ybvwelcome.set");
     }
 
     @Override
@@ -26,7 +39,7 @@ public class ClearCommand extends SubCommand {
         Player player = (Player) sender;
 
         if (args.length < 1) {
-            MessageUtils.sendMessage(sender, messageManager.getUsageClear());
+            messageUtils.sendMessage(sender, messageManager.getUsageClear());
             return;
         }
 
@@ -36,7 +49,7 @@ public class ClearCommand extends SubCommand {
         } else if (type.equals("quit")) {
             welcomeService.clearPlayerQuitMessage(player);
         } else {
-            MessageUtils.sendMessage(player, messageManager.getUsageClear());
+            messageUtils.sendMessage(player, messageManager.getUsageClear());
         }
     }
 

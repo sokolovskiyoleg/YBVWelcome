@@ -1,9 +1,17 @@
 package org.yabogvk.ybvwelcome.commands.sub;
 
 import org.bukkit.command.CommandSender;
+import org.yabogvk.ybvwelcome.YBVWelcome;
+import org.yabogvk.ybvwelcome.managers.MessageManager;
+import org.yabogvk.ybvwelcome.service.WelcomeService;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
 public class ReloadCommand extends SubCommand {
+
+    public ReloadCommand(YBVWelcome plugin, MessageManager messageManager, WelcomeService welcomeService,
+                         MessageUtils messageUtils) {
+        super(plugin, messageManager, welcomeService, messageUtils);
+    }
 
     @Override
     public String getName() {
@@ -20,6 +28,6 @@ public class ReloadCommand extends SubCommand {
         if (noPerm(sender)) return;
 
         plugin.reloadPlugin();
-        MessageUtils.sendMessage(sender, messageManager.getReloadSuccess());
+        messageUtils.sendMessage(sender, messageManager.getReloadSuccess());
     }
 }

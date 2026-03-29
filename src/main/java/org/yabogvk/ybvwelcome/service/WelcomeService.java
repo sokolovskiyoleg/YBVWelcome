@@ -15,15 +15,17 @@ public class WelcomeService {
     private final MessageService messageService;
     private final AsyncExecutor asyncExecutor;
     private final MessageManager messageManager;
+    private final MessageUtils messageUtils;
 
     public WelcomeService(YBVWelcome plugin, StorageService storageService,
                           MessageService messageService, AsyncExecutor asyncExecutor,
-                          MessageManager messageManager) {
+                          MessageManager messageManager, MessageUtils messageUtils) {
         this.plugin = plugin;
         this.storageService = storageService;
         this.messageService = messageService;
         this.asyncExecutor = asyncExecutor;
         this.messageManager = messageManager;
+        this.messageUtils = messageUtils;
     }
 
     public void loadPlayerData(Player player) {
@@ -53,6 +55,7 @@ public class WelcomeService {
 
     public void handleQuit(Player player) {
         messageService.broadcastQuit(player, storageService.getCachedMessages(player.getUniqueId()));
+        storageService.unloadPlayerData(player.getUniqueId());
     }
 
     public void handleFirstJoin(Player player) {
@@ -86,7 +89,7 @@ public class WelcomeService {
     }
 
     private void setPlayerMessage(Player player, String message, Database.MessageType type) {
-        if (messageLength(message) > plugin.getSettings().allowedSymbols) {
+        if (messageLength(message) > plugin.getSettings().getAllowedSymbols()) {
             messageService.send(player, messageManager.getToManySymbols());
             return;
         }
@@ -131,6 +134,6 @@ public class WelcomeService {
             return 0;
         }
 
-        return MessageUtils.stripColors(message).replace(" ", "").length();
+        return messageUtils.stripColors(message).replace(" ", "").length();
     }
 }

@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.db.Database;
 import org.yabogvk.ybvwelcome.model.PlayerMessages;
 import org.yabogvk.ybvwelcome.utils.SecurityUtils;
@@ -19,8 +18,8 @@ public class MySQLDatabase implements Database {
     private final HikariDataSource dataSource;
     private final Logger logger;
 
-    public MySQLDatabase(ConfigurationSection config) {
-        this.logger = YBVWelcome.getInstance().getLogger();
+    public MySQLDatabase(Logger logger, ConfigurationSection config) {
+        this.logger = logger;
         HikariConfig hikariConfig = new HikariConfig();
 
         String host = config.getString("host", "localhost");
@@ -99,7 +98,7 @@ public class MySQLDatabase implements Database {
 
         try (Connection conn = dataSource.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, uuid.toString());
-            stmt.setString(2, SecurityUtils.sanitizePlayerName(playerName));
+            stmt.setString(2, SecurityUtils.requireValidPlayerName(playerName));
             stmt.setString(3, SecurityUtils.sanitizeMessageContent(message));
             return stmt.executeUpdate() > 0;
         }
