@@ -141,8 +141,7 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
         return value.regionMatches(true, 0, prefix, 0, prefix.length());
     }
 
-    private void cleanupCool
-    downs(int cooldownSeconds) {
+    private void cleanupCooldowns(int cooldownSeconds) {
         if (cooldowns.size() < COOLDOWN_CLEANUP_THRESHOLD) {
             return;
         }
