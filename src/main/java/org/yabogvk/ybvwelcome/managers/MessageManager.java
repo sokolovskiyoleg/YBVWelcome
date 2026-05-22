@@ -131,10 +131,6 @@ public class MessageManager {
 
     public String getErrorDatabase() { return get("commands.error-database", "&8[&c&l!&8] &7Ошибка базы данных!"); }
 
-    public String getError() {
-        return get("commands.error", "&8[&c&l!&8] &7Ошибка. Сообщите администратору!");
-    }
-
     public String getToManySymbols() { return get("commands.to-many-symbols", "&8[&c&l!&8] &7Слишком много символов!"); }
 
     public String getCooldown() { return get("commands.cooldown", "&8[&c&l!&8] &7Подождите &c{time} &7секунд перед повторным использованием!"); }

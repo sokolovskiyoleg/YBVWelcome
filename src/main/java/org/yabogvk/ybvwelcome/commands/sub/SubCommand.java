@@ -7,7 +7,6 @@ import org.yabogvk.ybvwelcome.managers.MessageManager;
 import org.yabogvk.ybvwelcome.service.WelcomeService;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
-import java.util.Collections;
 import java.util.List;
 
 public abstract class SubCommand {
@@ -27,14 +26,14 @@ public abstract class SubCommand {
 
     public abstract String getName();
     public abstract String getPermission();
-    public abstract void execute(CommandSender sender, String[] args);
+    public abstract void execute(CommandSender sender, String[] args, int offset);
 
     public boolean hasAccess(CommandSender sender) {
         return sender.hasPermission(getPermission());
     }
 
-    public List<String> complete(CommandSender sender, String[] args) {
-        return Collections.emptyList();
+    public List<String> complete(CommandSender sender, String[] args, int offset) {
+        return List.of();
     }
 
     protected boolean noPerm(CommandSender sender) {

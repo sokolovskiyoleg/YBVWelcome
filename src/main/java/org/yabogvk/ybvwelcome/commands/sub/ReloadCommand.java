@@ -24,7 +24,7 @@ public class ReloadCommand extends SubCommand {
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
+    public void execute(CommandSender sender, String[] args, int offset) {
         if (noPerm(sender)) return;
 
         plugin.reloadPlugin();

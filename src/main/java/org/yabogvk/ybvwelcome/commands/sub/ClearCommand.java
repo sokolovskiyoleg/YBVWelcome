@@ -33,17 +33,17 @@ public class ClearCommand extends SubCommand {
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
+    public void execute(CommandSender sender, String[] args, int offset) {
         if (notPlayer(sender) || noPerm(sender)) return;
 
         Player player = (Player) sender;
 
-        if (args.length < 1) {
+        if (args.length - offset < 1) {
             messageUtils.sendMessage(sender, messageManager.getUsageClear());
             return;
         }
 
-        String type = args[0].toLowerCase(Locale.ROOT);
+        String type = args[offset].toLowerCase(Locale.ROOT);
         switch (type) {
             case "join" -> welcomeService.clearPlayerJoinMessage(player);
             case "quit" -> welcomeService.clearPlayerQuitMessage(player);
@@ -52,10 +52,10 @@ public class ClearCommand extends SubCommand {
     }
 
     @Override
-    public List<String> complete(CommandSender sender, String[] args) {
-        if (args.length == 1) {
+    public List<String> complete(CommandSender sender, String[] args, int offset) {
+        if (args.length - offset == 1) {
             return List.of("join", "quit");
         }
-        return super.complete(sender, args);
+        return super.complete(sender, args, offset);
     }
 }

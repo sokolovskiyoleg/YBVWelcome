@@ -57,8 +57,6 @@ public class StorageService {
         return asyncExecutor.supplyIo(() -> {
                     try {
                         return database.setMessage(playerId, playerName, message, type);
-                    } catch (RuntimeException e) {
-                        throw e;
                     } catch (SQLException e) {
                         throw new CompletionException(e);
                     }
@@ -84,8 +82,6 @@ public class StorageService {
                     return false;
                 }
                 return database.deleteMessage(playerId, type);
-            } catch (RuntimeException e) {
-                throw e;
             } catch (SQLException e) {
                 throw new CompletionException(e);
             }

@@ -29,9 +29,6 @@ public final class YBVWelcome extends JavaPlugin {
     @Getter
     private Settings settings;
     private MessageManager messageManager;
-    private AsyncExecutor asyncExecutor;
-    private StorageService storageService;
-    private MessageService runtimeMessageService;
     @Getter
     private WelcomeService welcomeService;
     private MessageUtils messageUtils;
@@ -47,11 +44,11 @@ public final class YBVWelcome extends JavaPlugin {
 
         try {
             Database database = DatabaseProvider.create(this);
-            asyncExecutor = new AsyncExecutor(this);
-            storageService = new StorageService(getLogger(), database, new PlayerMessageCache(), asyncExecutor);
-            runtimeMessageService = new MessageService(this::isPlaceholderAPIEnabled, messageManager, messageUtils);
-            welcomeService = new WelcomeService(getLogger(), () -> settings.getAllowedSymbols(), storageService,
-                    runtimeMessageService, asyncExecutor, messageManager, messageUtils);
+            AsyncExecutor asyncExecutor = new AsyncExecutor(this);
+            StorageService storageService = new StorageService(getLogger(), database, new PlayerMessageCache(), asyncExecutor);
+            MessageService runtimeMessageService = new MessageService(this::isPlaceholderAPIEnabled, messageManager, messageUtils);
+            welcomeService = new WelcomeService(getLogger(), () -> settings.getAllowedSymbols(), storageService, runtimeMessageService,
+                    asyncExecutor, messageManager, messageUtils);
             new WelcomeCommand(this, messageManager, welcomeService, settings, messageUtils);
             registerListener();
 

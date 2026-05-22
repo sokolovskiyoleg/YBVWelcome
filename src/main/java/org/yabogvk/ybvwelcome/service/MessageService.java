@@ -14,9 +14,9 @@ import org.yabogvk.ybvwelcome.model.PlayerMessages;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BooleanSupplier;
 
 public class MessageService {
@@ -51,7 +51,7 @@ public class MessageService {
         }
 
         Component promptComponent = messageUtils.parse(rawPrompt, target);
-        Set<java.util.UUID> clickedPlayers = ConcurrentHashMap.newKeySet();
+        Set<java.util.UUID> clickedPlayers = new HashSet<>();
 
         Component button = messageUtils.parse(messageManager.getWelcomeButtonText(), target)
                 .hoverEvent(HoverEvent.showText(messageUtils.parse(messageManager.getWelcomeButtonHover(), target)))
@@ -84,22 +84,16 @@ public class MessageService {
         String customFormat = join ? messageManager.getFormatJoinCustom() : messageManager.getFormatQuitCustom();
         String defaultMessage = join ? messageManager.getJoinDefault() : messageManager.getQuitDefault();
         String defaultFormat = join ? messageManager.getFormatJoinDefault() : messageManager.getFormatQuitDefault();
-        String groupType = toGroupType(type);
-
         if (customMessage != null && !customMessage.isEmpty()) {
             return customFormat.replace("{message}", customMessage);
         }
 
-        String groupMessage = messageManager.getGroupMessage(player, groupType);
+        String groupMessage = messageManager.getGroupMessage(player, join ? "join" : "quit");
         if (groupMessage != null) {
             return groupMessage;
         }
 
         return defaultFormat.replace("{message}", defaultMessage);
-    }
-
-    private String toGroupType(Database.MessageType type) {
-        return type == Database.MessageType.WELCOME ? "join" : "quit";
     }
 
     private void sendRandomWelcome(Player clicker, Player target) {

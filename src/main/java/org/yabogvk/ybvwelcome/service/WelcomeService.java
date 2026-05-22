@@ -124,10 +124,6 @@ public class WelcomeService {
     }
 
     private int messageLength(String message) {
-        if (message == null) {
-            return 0;
-        }
-
-        return messageUtils.stripColors(message).replace(" ", "").length();
+        return message == null ? 0 : messageUtils.stripColors(message).replace(" ", "").length();
     }
 }
