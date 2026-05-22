@@ -21,7 +21,6 @@ import org.yabogvk.ybvwelcome.utils.MessageUtils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -64,12 +63,12 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        String subCommandName = args[0].toLowerCase(Locale.ROOT);
+        String subCommandName = args[0];
         SubCommand subCmd = findSubCommand(subCommandName);
 
         if (sender instanceof Player player) {
             if (subCmd != null && subCmd.hasAccess(sender)
-                    && (subCommandName.equals("set") || subCommandName.equals("clear"))) {
+                    && ("set".equalsIgnoreCase(subCommandName) || "clear".equalsIgnoreCase(subCommandName))) {
                 int cooldownTime = settings.getCommandCooldown();
                 if (cooldownTime > 0) {
                     cleanupCooldowns(cooldownTime);
@@ -97,11 +96,11 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if (args.length == 1) {
-            String prefix = args[0].toLowerCase(Locale.ROOT);
+            String prefix = args[0];
             List<String> result = new ArrayList<>();
             for (SubCommand subCommand : subCommands) {
                 String name = subCommand.getName();
-                if (subCommand.hasAccess(sender) && name.toLowerCase(Locale.ROOT).startsWith(prefix)) {
+                if (subCommand.hasAccess(sender) && startsWithIgnoreCase(name, prefix)) {
                     result.add(name);
                 }
             }
@@ -109,16 +108,16 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length > 1) {
-            String subCommandName = args[0].toLowerCase(Locale.ROOT);
+            String subCommandName = args[0];
             SubCommand subCmd = findSubCommand(subCommandName);
 
             if (subCmd != null && subCmd.hasAccess(sender)) {
                 List<String> completions = subCmd.complete(sender, args, 1);
                 if (completions != null) {
-                    String prefix = args[args.length - 1].toLowerCase(Locale.ROOT);
+                    String prefix = args[args.length - 1];
                     List<String> result = new ArrayList<>();
                     for (String completion : completions) {
-                        if (completion.toLowerCase(Locale.ROOT).startsWith(prefix)) {
+                        if (startsWithIgnoreCase(completion, prefix)) {
                             result.add(completion);
                         }
                     }
@@ -138,7 +137,12 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
         return null;
     }
 
-    private void cleanupCooldowns(int cooldownSeconds) {
+    private boolean startsWithIgnoreCase(String value, String prefix) {
+        return value.regionMatches(true, 0, prefix, 0, prefix.length());
+    }
+
+    private void cleanupCool
+    downs(int cooldownSeconds) {
         if (cooldowns.size() < COOLDOWN_CLEANUP_THRESHOLD) {
             return;
         }
