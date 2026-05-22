@@ -2,7 +2,6 @@ package org.yabogvk.ybvwelcome.commands.sub;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.managers.MessageManager;
 import org.yabogvk.ybvwelcome.service.WelcomeService;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
@@ -11,14 +10,12 @@ import java.util.List;
 
 public abstract class SubCommand {
 
-    protected final YBVWelcome plugin;
     protected final MessageManager messageManager;
     protected final WelcomeService welcomeService;
     protected final MessageUtils messageUtils;
 
-    protected SubCommand(YBVWelcome plugin, MessageManager messageManager, WelcomeService welcomeService,
+    protected SubCommand(MessageManager messageManager, WelcomeService welcomeService,
                          MessageUtils messageUtils) {
-        this.plugin = plugin;
         this.messageManager = messageManager;
         this.welcomeService = welcomeService;
         this.messageUtils = messageUtils;

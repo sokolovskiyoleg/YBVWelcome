@@ -48,11 +48,7 @@ public class MessageManager {
         for (String key : config.getKeys(true)) {
             if (config.isString(key)) {
                 cachedMessages.put(key, config.getString(key));
-            }
-        }
-
-        for (String key : config.getKeys(true)) {
-            if (config.isList(key)) {
+            } else if (config.isList(key)) {
                 cachedLists.put(key, config.getStringList(key));
             }
         }

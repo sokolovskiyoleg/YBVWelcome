@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class WelcomeCommand implements CommandExecutor, TabCompleter {
+    private static final int COOLDOWN_CLEANUP_THRESHOLD = 256;
 
     private final MessageManager messageManager;
     private final Settings settings;
@@ -44,9 +45,9 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
             pluginCommand.setTabCompleter(this);
         }
 
-        subCommands.add(new ReloadCommand(plugin, messageManager, welcomeService, messageUtils));
-        subCommands.add(new SetCommand(plugin, messageManager, welcomeService, messageUtils));
-        subCommands.add(new ClearCommand(plugin, messageManager, welcomeService, messageUtils));
+        subCommands.add(new ReloadCommand(plugin::reloadPlugin, messageManager, welcomeService, messageUtils));
+        subCommands.add(new SetCommand(messageManager, welcomeService, messageUtils));
+        subCommands.add(new ClearCommand(messageManager, welcomeService, messageUtils));
     }
 
     @Override
@@ -69,6 +70,7 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
                     && (subCommandName.equals("set") || subCommandName.equals("clear"))) {
                 int cooldownTime = settings.getCommandCooldown();
                 if (cooldownTime > 0) {
+                    cleanupCooldowns(cooldownTime);
                     long lastUsed = cooldowns.getOrDefault(player.getUniqueId(), 0L);
                     long timeRemainingMillis = (lastUsed + (cooldownTime * 1000L)) - System.currentTimeMillis();
 
@@ -132,5 +134,15 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
             }
         }
         return null;
+    }
+
+    private void cleanupCooldowns(int cooldownSeconds) {
+        if (cooldowns.size() < COOLDOWN_CLEANUP_THRESHOLD) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        long ttlMillis = cooldownSeconds * 1000L;
+        cooldowns.entrySet().removeIf(entry -> now - entry.getValue() > ttlMillis);
     }
 }

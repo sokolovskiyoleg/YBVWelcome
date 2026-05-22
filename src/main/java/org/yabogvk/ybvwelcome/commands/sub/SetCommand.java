@@ -2,7 +2,6 @@ package org.yabogvk.ybvwelcome.commands.sub;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.managers.MessageManager;
 import org.yabogvk.ybvwelcome.service.WelcomeService;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
@@ -12,9 +11,9 @@ import java.util.Locale;
 
 public class SetCommand extends SubCommand {
 
-    public SetCommand(YBVWelcome plugin, MessageManager messageManager, WelcomeService welcomeService,
+    public SetCommand(MessageManager messageManager, WelcomeService welcomeService,
                       MessageUtils messageUtils) {
-        super(plugin, messageManager, welcomeService, messageUtils);
+        super(messageManager, welcomeService, messageUtils);
     }
 
     @Override

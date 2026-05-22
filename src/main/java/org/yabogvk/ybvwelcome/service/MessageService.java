@@ -14,9 +14,9 @@ import org.yabogvk.ybvwelcome.model.PlayerMessages;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
 import java.time.Duration;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BooleanSupplier;
 
 public class MessageService {
@@ -51,7 +51,7 @@ public class MessageService {
         }
 
         Component promptComponent = messageUtils.parse(rawPrompt, target);
-        Set<java.util.UUID> clickedPlayers = new HashSet<>();
+        Set<java.util.UUID> clickedPlayers = ConcurrentHashMap.newKeySet();
 
         Component button = messageUtils.parse(messageManager.getWelcomeButtonText(), target)
                 .hoverEvent(HoverEvent.showText(messageUtils.parse(messageManager.getWelcomeButtonHover(), target)))
@@ -79,16 +79,31 @@ public class MessageService {
     }
 
     public String resolveMessage(Player player, @Nullable PlayerMessages messages, Database.MessageType type) {
-        boolean join = type == Database.MessageType.WELCOME;
-        String customMessage = messages == null ? null : (join ? messages.joinMessage() : messages.quitMessage());
-        String customFormat = join ? messageManager.getFormatJoinCustom() : messageManager.getFormatQuitCustom();
-        String defaultMessage = join ? messageManager.getJoinDefault() : messageManager.getQuitDefault();
-        String defaultFormat = join ? messageManager.getFormatJoinDefault() : messageManager.getFormatQuitDefault();
+        String customMessage;
+        String customFormat;
+        String defaultMessage;
+        String defaultFormat;
+        String groupType;
+
+        if (type == Database.MessageType.WELCOME) {
+            customMessage = messages == null ? null : messages.joinMessage();
+            customFormat = messageManager.getFormatJoinCustom();
+            defaultMessage = messageManager.getJoinDefault();
+            defaultFormat = messageManager.getFormatJoinDefault();
+            groupType = "join";
+        } else {
+            customMessage = messages == null ? null : messages.quitMessage();
+            customFormat = messageManager.getFormatQuitCustom();
+            defaultMessage = messageManager.getQuitDefault();
+            defaultFormat = messageManager.getFormatQuitDefault();
+            groupType = "quit";
+        }
+
         if (customMessage != null && !customMessage.isEmpty()) {
             return customFormat.replace("{message}", customMessage);
         }
 
-        String groupMessage = messageManager.getGroupMessage(player, join ? "join" : "quit");
+        String groupMessage = messageManager.getGroupMessage(player, groupType);
         if (groupMessage != null) {
             return groupMessage;
         }
