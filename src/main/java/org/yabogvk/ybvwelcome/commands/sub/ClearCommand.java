@@ -44,12 +44,10 @@ public class ClearCommand extends SubCommand {
         }
 
         String type = args[0].toLowerCase(Locale.ROOT);
-        if (type.equals("join")) {
-            welcomeService.clearPlayerJoinMessage(player);
-        } else if (type.equals("quit")) {
-            welcomeService.clearPlayerQuitMessage(player);
-        } else {
-            messageUtils.sendMessage(player, messageManager.getUsageClear());
+        switch (type) {
+            case "join" -> welcomeService.clearPlayerJoinMessage(player);
+            case "quit" -> welcomeService.clearPlayerQuitMessage(player);
+            default -> messageUtils.sendMessage(player, messageManager.getUsageClear());
         }
     }
 

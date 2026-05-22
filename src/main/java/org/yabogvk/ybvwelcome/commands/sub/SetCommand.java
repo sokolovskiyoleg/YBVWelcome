@@ -41,12 +41,10 @@ public class SetCommand extends SubCommand {
         String type = args[0].toLowerCase(Locale.ROOT);
         String message = String.join(" ", java.util.Arrays.copyOfRange(args, 1, args.length));
 
-        if (type.equals("join")) {
-            welcomeService.setPlayerWelcomeMessage(player, message);
-        } else if (type.equals("quit")) {
-            welcomeService.setPlayerQuitMessage(player, message);
-        } else {
-            messageUtils.sendMessage(player, messageManager.getUsageSet());
+        switch (type) {
+            case "join" -> welcomeService.setPlayerWelcomeMessage(player, message);
+            case "quit" -> welcomeService.setPlayerQuitMessage(player, message);
+            default -> messageUtils.sendMessage(player, messageManager.getUsageSet());
         }
     }
 

@@ -1,26 +1,30 @@
 package org.yabogvk.ybvwelcome.service;
 
 import org.bukkit.entity.Player;
-import org.yabogvk.ybvwelcome.YBVWelcome;
+import org.jetbrains.annotations.NotNull;
 import org.yabogvk.ybvwelcome.db.Database;
 import org.yabogvk.ybvwelcome.managers.MessageManager;
 import org.yabogvk.ybvwelcome.model.PlayerMessages;
 import org.yabogvk.ybvwelcome.utils.MessageUtils;
 
+import java.util.function.IntSupplier;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class WelcomeService {
-    private final YBVWelcome plugin;
+    private final Logger logger;
+    private final IntSupplier allowedSymbolsSupplier;
     private final StorageService storageService;
     private final MessageService messageService;
     private final AsyncExecutor asyncExecutor;
     private final MessageManager messageManager;
     private final MessageUtils messageUtils;
 
-    public WelcomeService(YBVWelcome plugin, StorageService storageService,
+    public WelcomeService(@NotNull Logger logger, @NotNull IntSupplier allowedSymbolsSupplier, StorageService storageService,
                           MessageService messageService, AsyncExecutor asyncExecutor,
                           MessageManager messageManager, MessageUtils messageUtils) {
-        this.plugin = plugin;
+        this.logger = logger;
+        this.allowedSymbolsSupplier = allowedSymbolsSupplier;
         this.storageService = storageService;
         this.messageService = messageService;
         this.asyncExecutor = asyncExecutor;
@@ -28,13 +32,9 @@ public class WelcomeService {
         this.messageUtils = messageUtils;
     }
 
-    public void loadPlayerData(Player player) {
-        storageService.loadPlayerData(player);
-    }
-
     public void handleJoin(Player player, boolean firstJoin) {
         if (firstJoin) {
-            storageService.loadPlayerData(player);
+            storageService.getOrLoadMessages(player);
             messageService.broadcastFirstJoin(player);
             return;
         }
@@ -58,11 +58,6 @@ public class WelcomeService {
         storageService.unloadPlayerData(player.getUniqueId());
     }
 
-    public void handleFirstJoin(Player player) {
-        storageService.loadPlayerData(player);
-        messageService.broadcastFirstJoin(player);
-    }
-
     public void setPlayerWelcomeMessage(Player player, String message) {
         setPlayerMessage(player, message, Database.MessageType.WELCOME);
     }
@@ -81,7 +76,6 @@ public class WelcomeService {
 
     public void reload() {
         storageService.reload();
-        messageService.reload();
     }
 
     public void close() {
@@ -89,7 +83,7 @@ public class WelcomeService {
     }
 
     private void setPlayerMessage(Player player, String message, Database.MessageType type) {
-        if (messageLength(message) > plugin.getSettings().getAllowedSymbols()) {
+        if (messageLength(message) > allowedSymbolsSupplier.getAsInt()) {
             messageService.send(player, messageManager.getToManySymbols());
             return;
         }
@@ -98,7 +92,7 @@ public class WelcomeService {
                 .whenComplete((saved, throwable) -> asyncExecutor.runSync(() -> {
                     if (throwable != null || !Boolean.TRUE.equals(saved)) {
                         if (throwable != null) {
-                            plugin.getLogger().log(Level.WARNING,
+                            logger.log(Level.WARNING,
                                     "Ошибка сохранения сообщения для " + player.getName() + " (" + type + ")",
                                     throwable);
                         }
@@ -114,7 +108,7 @@ public class WelcomeService {
         storageService.clearMessage(player, type)
                 .whenComplete((cleared, throwable) -> asyncExecutor.runSync(() -> {
                     if (throwable != null) {
-                        plugin.getLogger().log(Level.WARNING,
+                        logger.log(Level.WARNING,
                                 "Ошибка очистки сообщения для " + player.getName() + " (" + type + ")",
                                 throwable);
                         messageService.send(player, messageManager.getErrorDatabase());
