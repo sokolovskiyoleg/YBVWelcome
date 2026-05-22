@@ -43,7 +43,7 @@ public class SetCommand extends SubCommand {
         switch (type) {
             case "join" -> welcomeService.setPlayerWelcomeMessage(player, message);
             case "quit" -> welcomeService.setPlayerQuitMessage(player, message);
-            default -> messageUtils.sendMessage(player, messageManager.getUsageSet());
+            default -> messageUtils.sendMessage(player, messageManager.getInvalidType().replace("{type}", type));
         }
     }
 

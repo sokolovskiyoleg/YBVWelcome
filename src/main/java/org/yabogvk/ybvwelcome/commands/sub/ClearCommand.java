@@ -46,7 +46,7 @@ public class ClearCommand extends SubCommand {
         switch (type) {
             case "join" -> welcomeService.clearPlayerJoinMessage(player);
             case "quit" -> welcomeService.clearPlayerQuitMessage(player);
-            default -> messageUtils.sendMessage(player, messageManager.getUsageClear());
+            default -> messageUtils.sendMessage(player, messageManager.getInvalidType().replace("{type}", type));
         }
     }
 

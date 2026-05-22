@@ -130,6 +130,16 @@ public class MessageManager {
     public String getToManySymbols() { return get("commands.to-many-symbols", "&8[&c&l!&8] &7Слишком много символов!"); }
 
     public String getCooldown() { return get("commands.cooldown", "&8[&c&l!&8] &7Подождите &c{time} &7секунд перед повторным использованием!"); }
+    public String getInvalidType() { return get("commands.invalid-type", "&8[&c&l!&8] &7Неверный тип: &c{type}&7. Используйте: &ajoin &7или &aquit&7."); }
+    public String getDebugHeader() { return get("commands.debug-header", "&8[&b&lDEBUG&8] &7YBVWelcome runtime state:"); }
+    public String getDebugSerializer() { return get("commands.debug-serializer", "&7serializer: &b{value}"); }
+    public String getDebugDatabaseType() { return get("commands.debug-database-type", "&7database.type: &b{value}"); }
+    public String getDebugAllowedSymbols() { return get("commands.debug-allowed-symbols", "&7messages.allowed-symbols: &b{value}"); }
+    public String getDebugCooldown() { return get("commands.debug-cooldown", "&7commands.cooldown: &b{value}"); }
+    public String getDebugJoinEnabled() { return get("commands.debug-join-enabled", "&7messages.join.enabled: &b{value}"); }
+    public String getDebugFirstJoinEnabled() { return get("commands.debug-firstjoin-enabled", "&7messages.join.firstjoin-enabled: &b{value}"); }
+    public String getDebugQuitEnabled() { return get("commands.debug-quit-enabled", "&7messages.quit.enabled: &b{value}"); }
+    public String getDebugPlaceholderApi() { return get("commands.debug-placeholderapi", "&7placeholderapi.enabled: &b{value}"); }
 
 
     public String getUsage() { return get("commands.usage", "&6Использование: &e/ybvwelcome &7[set|clear|reload]"); }

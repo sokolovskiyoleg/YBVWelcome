@@ -9,7 +9,7 @@ softdepend: ["PlaceholderAPI"]
 
 commands:
   ybvwelcome:
-    usage: /<command> [set|clear|reload]
+    usage: /<command> [set|clear|reload|debug]
     aliases: [welcome]
     permission: ybvwelcome.use
 permissions:
@@ -23,5 +23,5 @@ permissions:
     description: Возможность очищать свои сообщения входа/выхода; старый ybvwelcome.set тоже поддерживается
     default: op
   ybvwelcome.admin:
-    description: Доступ к перезагрузке плагина через /ybvwelcome reload
+    description: Доступ к админ-подкомандам /ybvwelcome reload и /ybvwelcome debug
     default: op

@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.commands.sub.ClearCommand;
+import org.yabogvk.ybvwelcome.commands.sub.DebugCommand;
 import org.yabogvk.ybvwelcome.commands.sub.ReloadCommand;
 import org.yabogvk.ybvwelcome.commands.sub.SetCommand;
 import org.yabogvk.ybvwelcome.commands.sub.SubCommand;
@@ -46,6 +47,7 @@ public class WelcomeCommand implements CommandExecutor, TabCompleter {
         }
 
         subCommands.add(new ReloadCommand(plugin::reloadPlugin, messageManager, welcomeService, messageUtils));
+        subCommands.add(new DebugCommand(messageManager, welcomeService, messageUtils, () -> settings, plugin::isPlaceholderAPIEnabled));
         subCommands.add(new SetCommand(messageManager, welcomeService, messageUtils));
         subCommands.add(new ClearCommand(messageManager, welcomeService, messageUtils));
     }
