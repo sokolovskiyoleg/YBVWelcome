@@ -5,6 +5,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.yabogvk.ybvwelcome.YBVWelcome;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -44,20 +46,41 @@ public class ConfigManager {
         }
 
         config.options().copyDefaults(true);
-        migrateConfiguration(fileName, config, targetVersion);
+        migrateConfiguration(fileName, file, config, targetVersion);
         saveConfiguration(config, file);
 
         return config;
     }
 
-    private void migrateConfiguration(String fileName, FileConfiguration config, int targetVersion) {
+    private void migrateConfiguration(String fileName, File file, FileConfiguration config, int targetVersion) {
         int currentVersion = config.getInt(VERSION_KEY, 0);
         if (currentVersion >= targetVersion) {
             return;
         }
 
+        backupBeforeMigration(fileName, file, currentVersion);
         config.set(VERSION_KEY, targetVersion);
         plugin.getLogger().info("Migrated " + fileName + " from version " + currentVersion + " to " + targetVersion + ".");
+    }
+
+    private void backupBeforeMigration(String fileName, File sourceFile, int currentVersion) {
+        String backupName = fileName + ".bak-v" + currentVersion;
+        File backupFile = new File(plugin.getDataFolder(), backupName);
+        if (backupFile.exists()) {
+            return;
+        }
+
+        byte[] buffer = new byte[8192];
+        try (FileInputStream in = new FileInputStream(sourceFile);
+             FileOutputStream out = new FileOutputStream(backupFile)) {
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+            plugin.getLogger().info("Created config backup: " + backupName);
+        } catch (IOException e) {
+            plugin.getLogger().warning("Could not create config backup for " + fileName + ": " + e.getMessage());
+        }
     }
 
     private void saveConfiguration(FileConfiguration config, File file) {
