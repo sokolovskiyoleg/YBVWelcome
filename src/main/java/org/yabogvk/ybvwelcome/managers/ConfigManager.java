@@ -37,6 +37,7 @@ public class ConfigManager {
         }
 
         FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        FileConfiguration userConfigSnapshot = YamlConfiguration.loadConfiguration(file);
 
         try (InputStreamReader defaultConfigStream = new InputStreamReader(plugin.getResource(fileName), StandardCharsets.UTF_8)) {
             YamlConfiguration defaultConfig = YamlConfiguration.loadConfiguration(defaultConfigStream);
@@ -46,10 +47,21 @@ public class ConfigManager {
         }
 
         config.options().copyDefaults(true);
+        preserveUserOnlySections(fileName, config, userConfigSnapshot);
         migrateConfiguration(fileName, file, config, targetVersion);
         saveConfiguration(config, file);
 
         return config;
+    }
+
+    private void preserveUserOnlySections(String fileName, FileConfiguration mergedConfig, FileConfiguration userConfig) {
+        if (!"messages.yml".equals(fileName)) {
+            return;
+        }
+
+        if (userConfig.isConfigurationSection("group-messages.list")) {
+            mergedConfig.set("group-messages.list", userConfig.getConfigurationSection("group-messages.list"));
+        }
     }
 
     private void migrateConfiguration(String fileName, File file, FileConfiguration config, int targetVersion) {
