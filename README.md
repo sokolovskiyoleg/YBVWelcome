@@ -1,30 +1,47 @@
-# YBVWelcome 🌟
+# YBVWelcome
 
-**YBVWelcome** — это современный, высокопроизводительный и гибкий плагин для Minecraft (Paper/Spigot). Позволяет игрокам и администраторам полностью кастомизировать систему оповещений о входе и выходе.
+English | [Русский](README.ru.md)
 
-## ✨ Особенности
+**YBVWelcome** is a modern, lightweight Paper/Spigot plugin that lets players and admins customize join/quit messages with clear priority rules and config-driven behavior.
 
-* **👑 Система групп (Ранги):** Настраивайте уникальные сообщения для разных групп игроков (VIP, Premium и т.д.) через пермишены.
-* **🌈 Система цветов:** Полная поддержка Legacy (`&f`), HEX-цветов (`&#ff0000`) и градиентов.
+## Features
 
-## 👥 Приоритеты сообщений
-Плагин автоматически выбирает лучшее сообщение по иерархии:
-1. **Custom** (Личное сообщение игрока, если установлено).
-2. **Group** (Сообщение его ранга из конфига).
-3. **Default** (Стандартное системное сообщение).
+- Group-based join/quit messages by permissions (`group-messages` in `messages.yml`)
+- Player custom messages (`/welcome set join|quit ...`)
+- Message priority: `custom -> group -> default`
+- Color support:
+  - Legacy codes (`&a`, `&f`, etc.)
+  - Hex colors (`&#RRGGBB`)
+  - Optional MiniMessage serializer
+- Optional PlaceholderAPI integration
+- Runtime debug command (`/welcome debug`)
+- SQLite/MySQL support
 
-## 🛠 Команды и Права
+## Commands
 
-| Команда | Описание | Пермишен |
-| :--- | :--- | :--- |
-| `/welcome` | Показать справку | `ybvwelcome.use` |
-| `/welcome set <join/quit> <текст>` | Установить сообщение | `ybvwelcome.set` |
-| `/welcome clear <join/quit>` | Удалить сообщение | `ybvwelcome.set` |
-| `/welcome reload` | Перезагрузить плагин | `ybvwelcome.admin` |
+| Command | Description | Permission |
+| --- | --- | --- |
+| `/welcome` | Show usage/help | `ybvwelcome.use` |
+| `/welcome set <join|quit> <text>` | Set personal join/quit message | `ybvwelcome.set` |
+| `/welcome clear <join|quit>` | Clear personal join/quit message | `ybvwelcome.clear` |
+| `/welcome reload` | Reload plugin configs | `ybvwelcome.admin` |
+| `/welcome debug` | Show runtime state | `ybvwelcome.admin` |
 
-## ⚙️ Установка
+## Install
 
-1. Поместите `.jar` в папку `/plugins/`.
-2. Запустите сервер для генерации файлов.
-3. Настройте `config.yml` (выбор БД) и `messages.yml` (форматы и группы).
-4. Наслаждайтесь красивыми уведомлениями!
+1. Put the plugin `.jar` into your server `plugins/` directory.
+2. Start the server once to generate config files.
+3. Edit:
+   - `config.yml` for runtime/database settings
+   - `messages.yml` for formats, command messages, and group rules
+4. Reload or restart the server.
+
+```bash
+mvn package
+```
+
+Run tests:
+
+```bash
+mvn test
+```
