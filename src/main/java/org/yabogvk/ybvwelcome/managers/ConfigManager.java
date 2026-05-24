@@ -10,6 +10,9 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 public class ConfigManager {
+    private static final String VERSION_KEY = "config-version";
+    private static final int CONFIG_VERSION = 2;
+    private static final int MESSAGES_VERSION = 2;
 
     private final YBVWelcome plugin;
     private FileConfiguration mainConfig;
@@ -21,11 +24,11 @@ public class ConfigManager {
     }
 
     private void loadConfigs() {
-        mainConfig = loadConfiguration("config.yml");
-        messagesConfig = loadConfiguration("messages.yml");
+        mainConfig = loadConfiguration("config.yml", CONFIG_VERSION);
+        messagesConfig = loadConfiguration("messages.yml", MESSAGES_VERSION);
     }
 
-    private FileConfiguration loadConfiguration(String fileName) {
+    private FileConfiguration loadConfiguration(String fileName, int targetVersion) {
         File file = new File(plugin.getDataFolder(), fileName);
         if (!file.exists()) {
             plugin.saveResource(fileName, false);
@@ -41,9 +44,20 @@ public class ConfigManager {
         }
 
         config.options().copyDefaults(true);
+        migrateConfiguration(fileName, config, targetVersion);
         saveConfiguration(config, file);
 
         return config;
+    }
+
+    private void migrateConfiguration(String fileName, FileConfiguration config, int targetVersion) {
+        int currentVersion = config.getInt(VERSION_KEY, 0);
+        if (currentVersion >= targetVersion) {
+            return;
+        }
+
+        config.set(VERSION_KEY, targetVersion);
+        plugin.getLogger().info("Migrated " + fileName + " from version " + currentVersion + " to " + targetVersion + ".");
     }
 
     private void saveConfiguration(FileConfiguration config, File file) {
