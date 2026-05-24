@@ -8,7 +8,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import org.yabogvk.ybvwelcome.YBVWelcome;
 import org.yabogvk.ybvwelcome.db.Database;
 import org.yabogvk.ybvwelcome.managers.MessageManager;
 import org.yabogvk.ybvwelcome.model.PlayerMessages;
@@ -18,19 +17,17 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BooleanSupplier;
 
 public class MessageService {
-    private final YBVWelcome plugin;
+    private final BooleanSupplier placeholderEnabled;
     private final MessageManager messageManager;
     private final MessageUtils messageUtils;
 
-    public MessageService(YBVWelcome plugin, MessageManager messageManager, MessageUtils messageUtils) {
-        this.plugin = plugin;
+    public MessageService(BooleanSupplier placeholderEnabled, MessageManager messageManager, MessageUtils messageUtils) {
+        this.placeholderEnabled = placeholderEnabled;
         this.messageManager = messageManager;
         this.messageUtils = messageUtils;
-    }
-
-    public void reload() {
     }
 
     public void send(CommandSender sender, String message) {
@@ -89,13 +86,13 @@ public class MessageService {
         String groupType;
 
         if (type == Database.MessageType.WELCOME) {
-            customMessage = messages != null ? messages.joinMessage() : null;
+            customMessage = messages == null ? null : messages.joinMessage();
             customFormat = messageManager.getFormatJoinCustom();
             defaultMessage = messageManager.getJoinDefault();
             defaultFormat = messageManager.getFormatJoinDefault();
             groupType = "join";
         } else {
-            customMessage = messages != null ? messages.quitMessage() : null;
+            customMessage = messages == null ? null : messages.quitMessage();
             customFormat = messageManager.getFormatQuitCustom();
             defaultMessage = messageManager.getQuitDefault();
             defaultFormat = messageManager.getFormatQuitDefault();
@@ -123,7 +120,7 @@ public class MessageService {
         String randomMessage = variants.get(java.util.concurrent.ThreadLocalRandom.current().nextInt(variants.size()));
         String processedMessage = randomMessage.replace("{player}", target.getName());
 
-        if (plugin.isPlaceholderAPIEnabled()) {
+        if (placeholderEnabled.getAsBoolean()) {
             processedMessage = PlaceholderAPI.setPlaceholders(clicker, processedMessage);
         }
 

@@ -6,6 +6,7 @@
 #  ybvwelcome.clear - /ybvwelcome clear join|quit               #
 #  ybvwelcome.set Пока-что работает и для /ybvwelcome clear     #
 # ============================================================= #
+config-version: 2
 serializer: LEGACY # LEGACY, MINIMESSAGE
 database:
   type: SQLITE # SQLITE, MYSQL
